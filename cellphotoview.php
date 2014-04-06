@@ -259,7 +259,7 @@ foreach($files as $increment => $name)
 				// Output
 				if(strpos($name,".jpg"))
 				{
-					imagejpeg($thumb,$cellphotodir."/thumbs/thumb_".$name);
+					$saved = imagejpeg($thumb,$cellphotodir."/thumbs/thumb_".$name);
 				}
 				if(strpos($name,".gif"))
 				{
