@@ -14,7 +14,7 @@
 	
 	//POP3 (ssl required)
 	//this works for INBOX (the only mailbox listed by GetMailBoxList)
-	$myCellPhotoMail = new CellPhotoMail("{pop3.live.com:995/pop3/ssl}INBOX","jaemzware@hotmail.com","8microsofthealth",null,null);
+	$myCellPhotoMail = new CellPhotoMail("{pop3.live.com:995/pop3/ssl}INBOX","jaemzware@hotmail.com","Doggy@Lady1",null,null);
 	
 	//use to get list of mailboxes (GetMailBoxList())
 	//$myCellPhotoMail = new CellPhotoMail("{pop3.live.com:995/pop3/ssl}","jaemzware@hotmail.com","8microsofthealth",null,null);
@@ -37,7 +37,7 @@
 	
 	//$myCellPhotoMail->ShowPlainAndHtmlParts();
 	
-	//$myCellPhotoMail->SaveMedia();
+	$myCellPhotoMail->SaveMedia();
 ?>
 </body>
 </html>

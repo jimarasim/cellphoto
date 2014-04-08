@@ -2,6 +2,8 @@
 
 include 'cellphotopost.php';
 
+//NOTE: /CELLPHOTO, /CELLPHOTO/CELLPHOTO, AND /CELLPHOTO/CELLPHOTO/THUMBS NEED TO BE WRITEABLE
+
 class CellPhotoMail
 {
   //email authentication
@@ -236,7 +238,7 @@ class CellPhotoMail
   //serialize header info (subject, from, date) with photo name
   private function SerializeHeaderInfo($messageValue,$fileName)
   {
-    //check if cellphoto.xml exists.  
+    //check if cellphoto.xml exists.  NOTE: THIS IS USED BY CELLPHOTOVIEWFRAME
     if(file_exists("cellphoto.xml"))
     {
 	    //load dom from cellphoto.xml and get the root
@@ -276,9 +278,12 @@ class CellPhotoMail
     $photoNode->appendChild($dateElement);
 
     //save dom doc to file
-    $DOMDOC->save("cellphoto.xml");
+    $documentSaved = $DOMDOC->save("cellphoto.xml");
+    
+    echo("DOCUMENT SAVED:".$documentSaved."<br />");
   
   }
+  
   
   public function ShowPlainAndHtmlParts()
   {
@@ -308,7 +313,6 @@ class CellPhotoMail
           echo(imap_fetchbody($this->imapStream,$messageValue,$partid)."<hr>");
         }
       }
-      
     }
   }
   
