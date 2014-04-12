@@ -67,7 +67,6 @@ class CellPhotoMail
    */
   private function CheckWritePermissions()
   {
-      echo('CHECK IF ALL DIRECTORIES ARE WRITEABLE<br />');
       
       //CHECK CURRENT DIRECTORY
       if(!is_writable('.'))
@@ -86,6 +85,9 @@ class CellPhotoMail
       {
           throw new Exception('CELLPHOTO/THUMBS DIRECTORY IS NOT WRITEABLE');
       }
+      
+      
+      echo('VERIFIED ALL DIRECTORIES ARE WRITEABLE<br />');
       
   }
   
@@ -223,7 +225,7 @@ class CellPhotoMail
         foreach($messagePartsArray as $messageValue => $partarray)
         {
 
-            echo("MESSAGE #".$messageValue."<BR />");
+            echo("MESSAGE#".$messageValue."<BR />");
   
             //show parts of message     
             $headerInfo = imap_headerinfo($imapStream,$messageValue);
@@ -231,7 +233,7 @@ class CellPhotoMail
             //subject
             if(isset($headerInfo->subject))
             {
-                echo("<hr><b>Subject:</b>".$headerInfo->subject."<br />");
+                echo("<b>Subject:</b>".$headerInfo->subject."<br />");
             }
             
             //date
@@ -257,7 +259,6 @@ class CellPhotoMail
                 echo(" Part:".$partid." SubType:".$subtype."<br />");                
             }
               
-            echo("<hr>");
         }
   }
   
@@ -344,7 +345,7 @@ class CellPhotoMail
                     //save small version of image if its gigantic (will save with prefix "small_"
                     if(($subtype == "JPEG")||($subtype == "GIF")||($subtype == "PNG"))
                     {
-                        $this->SaveSmallVersionOfImage(1200,$subtype,$filestring);
+                        $this->SaveSmallVersionOfImage(600,$subtype,$filestring);
                     }
                     
        
@@ -360,6 +361,9 @@ class CellPhotoMail
    */
   private function SerializeHeaderInfo($imapStream,$messagePartsArray,$messageValue,$fileName)
   {
+      
+    echo("SERIALIZING MESSAGE#:".$messageValue."<br />");
+    
     //check if cellphoto.xml exists.  NOTE: THIS IS USED BY CELLPHOTOVIEWFRAME
     if(file_exists("cellphoto.xml"))
     {
@@ -386,7 +390,7 @@ class CellPhotoMail
     $headerInfo = imap_headerinfo($imapStream,$messageValue);
     
     //get message body
-    $messageBody = $this->ShowAllPlainAndHtmlParts($imapStream,$messagePartsArray,$messageValue);
+    $messageBody = $this->GetPlainAndHtmlParts($imapStream,$messagePartsArray,$messageValue);
     
     //create one "record"
     $photoElement = $DOMDOC->createElement('photo');
@@ -406,16 +410,13 @@ class CellPhotoMail
 
     //save dom doc to file
     $documentSaved = $DOMDOC->save("cellphoto.xml");
-    
-    echo("DOCUMENT SAVED:".$documentSaved."<br />");
   
   }
   
   /**
-   * This method is intended to find the body or text of all messages.
-   * If a $targetMessageValue is specified, it returns the body of that one
+   * This method is intended to find the body or text of a particular message.
    */
-  private function ShowAllPlainAndHtmlParts($imapStream,$messagePartsArray,$targetMessageValue)
+  private function GetPlainAndHtmlParts($imapStream,$messagePartsArray,$targetMessageValue)
   {
     //body found for the target message value
     $targetMessageValueBody="";
@@ -423,37 +424,21 @@ class CellPhotoMail
     //cycle through all messages
     foreach($messagePartsArray as $messageValue => $partarray)
     {
-      
-      //cycle through the html and plain text parts of each message
-      foreach($partarray as $partid => $subtype)
-      {    
-        //only show html and plain test parts
-        $partsToShow = array("HTML","PLAIN");
-        if(in_array($subtype,$partsToShow))
-        {
-          echo("<hr>MESSAGE #".$messageValue);
-          switch ($subtype)
+      if($targetMessageValue===$messageValue)
+      {
+        //cycle through the html and plain text parts of each message
+        foreach($partarray as $partid => $subtype)
+        {    
+          //only show html and plain test parts
+          $partsToShow = array("HTML","PLAIN");
+          if(in_array($subtype,$partsToShow))
           {
-            case "HTML":
-              echo("HTML<BR />");
-              break;
-            case "PLAIN":
-              echo("PLAIN<BR />");
-              break;              
+            //fetch body bart of the message 
+            $bodyPart = imap_fetchbody($imapStream,$messageValue,$partid);
+
+            $targetMessageValueBody.=$bodyPart." ";
+
           }
-          
-          //fetch body bart of the message 
-          $bodyPart = imap_fetchbody($imapStream,$messageValue,$partid);
-          
-          echo($bodyPart."<br />");
-          
-          //get the target messages value
-          if($targetMessageValue===$messageValue)
-          {
-            echo("MESSAGE:".$bodyPart."<br />");
-            $targetMessageValueBody.="MESSAGE:".$bodyPart." ";
-          }
-          
         }
       }
     }
@@ -473,7 +458,7 @@ class CellPhotoMail
 
     if(($width>$maxDimension)||($height>$maxDimension))
     {
-        echo('CREATING SMALL VERSION OF IMAGE:'.$filestring."<br />");
+        echo('CREATING SMALL VERSION OF IMAGE:small_'.$filestring."<br />");
         
         //set the new width and height
         if($width > $height)

@@ -4,6 +4,7 @@
 </head>
 <body>
     <!--NOTE: /CELLPHOTO, /CELLPHOTO/CELLPHOTO, AND /CELLPHOTO/CELLPHOTO/THUMBS NEED TO BE WRITEABLE-->
+    <H1><A href="cellphotoview.php">View Cell Photos</a></h1>
 <?php
 	include 'cellphotomail.class'; 
 	echo('CELLPHOTO<BR />');
