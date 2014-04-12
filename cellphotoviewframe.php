@@ -13,8 +13,19 @@
 <body>
 <center>
 <?php
+
+        $filename = $_POST['filename'];
+
+        //show the small version if it exists
+        if(file_exists("cellphoto/small_".$filename))
+        {
+            echo("cellphoto/small_".$filename."<br /><img src='cellphoto/small_".$filename."' /><br />");
+        }
+        
 	//show the picture
-	echo("<img src='cellphoto/".$_POST['filename']."' /><br />");
+	echo("cellphoto/".$filename."<BR /><img src='cellphoto/".$filename."' /><br />");
+        
+        
 	
 	//check for additional information in cellphoto.xml
 	if(file_exists('cellphoto.xml'))
@@ -29,12 +40,13 @@
 	    //comb through FILENODES for this photo
 	    foreach($FILENODES as $filenode)
 	    {
-			if($filenode->nodeValue == $_POST['filename'])
+			if($filenode->nodeValue == $filename)
 			{
-				//found it...print <subject>, <from>, and <date>
+				//found it...print <subject>, <from>, and <date> and <body>
 				echo($filenode->nextSibling->nodeValue."<br />");
 				echo($filenode->nextSibling->nextSibling->nodeValue."<br />");
 				echo($filenode->nextSibling->nextSibling->nextSibling->nodeValue."<br />");
+                                echo($filenode->nextSibling->nextSibling->nextSibling->nextSibling->nodeValue."<br />");
 				break;
 			}
 	    }

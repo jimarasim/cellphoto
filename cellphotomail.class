@@ -1,8 +1,6 @@
-    <?php
+<?php
 
-include 'cellphotopost.php';
-
-//NOTE: /CELLPHOTO, /CELLPHOTO/CELLPHOTO, AND /CELLPHOTO/CELLPHOTO/THUMBS NEED TO BE WRITEABLE
+date_default_timezone_set('America/Los_Angeles');
 
 class CellPhotoMail
 {
@@ -16,227 +14,351 @@ class CellPhotoMail
   //cell photo file name prefix
   private $fileprefix;
   
-  //vars for reading email
-	private $imapStream;
-  private $messagePartsArray;
-
   function __construct($server,$uid,$pwd,$fileprefix,$filesubdir)
   { 
-    //email authentication
-    
-    //godaddy
-    //$this->server = is_null($server)?"{imap.jaemzware.com:143/notls}INBOX":$server; //not allowed on godaddy anymore
-    //$this->uid = is_null($uid)?"jaemzwareco@jaemzware.com":$uid;
-    //$this->pwd = is_null($pwd)?"8jaemzware":$pwd;  
+    //email server settings
     $this->server = is_null($server)?"{imap.gmail.com:993/imap/ssl}INBOX":$server; 
     $this->uid = is_null($uid)?"jaemzware@gmail.com":$uid;
     $this->pwd = is_null($pwd)?"8googlegoogle":$pwd;  
     
     //cell photo file name
     $this->fileprefix = is_null($fileprefix)?"JAEMZBOT":$fileprefix;
+    
     //cell photo subdirectory
     $this->filesubdir = is_null($filesubdir)?"cellphoto":$filesubdir;
     
-    echo("constructor<br />");
+    echo('INSTANTIATED<br />');
   }
   
-  function __destruct()
-  {
-    //close the imapStream if it was opened (successfully)
-    if($this->imapStream)
-    {
-      imap_close($this->imapStream);
-    }
-  }
-
-  public function Connect()
+  /**
+   * This method retrieves photos from the mail server, saves the images, then posts them
+   */
+  public function ProcessPhotos()
   {
       try
       {
-            echo("connect".$this->server."<br />");
-          //open stream to email inbox
-                $this->imapStream = imap_open($this->server, $this->uid, $this->pwd);
-                
-                echo("imap opened".$this->imapStream);
-          if($this->imapStream==FALSE)
-          {
-            echo("could not open stream to mail server<br />");
+          //make sure all directories can be written to
+          $this->CheckWritePermissions();
+          
+          //get a connection to the imap server
+          $imapStream=$this->Connect();
+          
+          //get the messages that haven't been read
+          $messagePartsArray = $this->GetUnseenMessages($imapStream);
+          
+          //Display the message parts
+          $this->DisplayMessageParts($imapStream,$messagePartsArray);
+          
+          //Save the images
+          $this->SaveMedia($imapStream,$messagePartsArray);
+          
+          //close the stream
+          echo('CLOSE CONNECTION<br />');
+          imap_close($imapStream);
+      } 
+      catch (Exception $ex) 
+      {
+          echo('EXCEPTION:'.$ex->getMessage().'<br />');
+      }
+  }
+  
+  /**
+   * This method checks if all files and directories involved are writeable
+   */
+  private function CheckWritePermissions()
+  {
+      echo('CHECK IF ALL DIRECTORIES ARE WRITEABLE<br />');
+      
+      //CHECK CURRENT DIRECTORY
+      if(!is_writable('.'))
+      {
+          throw new Exception('WORKING DIRECTORY IS NOT WRITEABLE');
+      }
+      
+      //CHECK CELLPHOTO DIRECTORY
+      if(!is_writable('cellphoto'))
+      {
+          throw new Exception('CELLPHOTO DIRECTORY IS NOT WRITEABLE');
+      }
+      
+      //CHECK THUMBS DIRECTORY
+      if(!is_writable('cellphoto/thumbs'))
+      {
+          throw new Exception('CELLPHOTO/THUMBS DIRECTORY IS NOT WRITEABLE');
+      }
+      
+  }
+  
+  /**
+   * This method connects to the mail server
+   */
+  private function Connect()
+  {
+        echo('CONNECT'.$this->server.'<br />');
+
+        //open stream to email inbox
+        $imapStream = imap_open($this->server, $this->uid, $this->pwd);
+
+        //verify it opened
+        if($imapStream==FALSE)
+        {
+            //throw exception with errors if it failed
+            $imapErrors='CONNECT ERRORS:<br />';
             foreach(imap_errors() as $errorindex => $error)
             {
-              echo($errorindex."=>".$error."<br />");      
+                $imapErrors.=$errorindex."=>".$error."<br />";      
             }
-            return FALSE;
-          }
-          else
-          {
-              echo("connection open<br />");
-            return TRUE;
-          }
-      }
-      catch (Exception $e) {
-        echo 'Caught exception: ',  $e->getMessage(), "\n";
+
+            throw new Exception($imapErrors);
         }
+
+        echo('CONNECTED<BR />');
+
+        //give back the open imapStream
+        return $imapStream;
   }
-  public function GetMailBoxList()
+ 
+  /**
+   * This method gets the UNREAD messages
+   */
+  private function GetUnseenMessages($imapStream)
   {
-    return imap_getmailboxes($this->imapStream,$this->server,"*");  
+        echo('GET UNSEEN MESSAGES<br />');
+        
+        $messagePartsArray = $this->GetMessages($imapStream,'UNSEEN');
+        
+        return $messagePartsArray;
   }
   
-  public function GetAllMessages()
+  /**
+   * THIS METHOD GETS MESSAGE IDS OF A PARTICULAR TYPE
+   */
+  private function GetMessages($imapStream,$messageType)
   {
-    echo("retrieving all messages<br />");
-    return $this->GetMessages("");
-  }
-  
-  public function GetUnseenMessages()
-  {
-    echo("retrieving unseen messages<br />");
-    return $this->GetMessages("UNSEEN");
-  }
-  
-  private function GetMessages($messageType)
-  {
-    //stream opened, check for unread mail
-		$messageArray = imap_search($this->imapStream,$messageType);
-		
-		//if messageArray is FALSE, there are no messages found
-		if(!$messageArray)
-		{
-      echo("did not find any messages");
-			return FALSE;
-		}
-    
-    //populate the messagePartsArray
-    $this->RetrieveMessageParts($messageArray);
-    
-    //mark messages as read
-    foreach($messageArray as $messageValue)
-    {
-		  imap_setflag_full($this->imapStream,$messageValue,"\\Seen");
-    }
-    
-    return TRUE;
+        echo('GET MESSAGE IDS<br />');
+        
+        //stream opened, get message ids of $messageType
+        $messageArray = imap_search($imapStream,$messageType);
+
+        //if messageArray is FALSE, there are no messages found
+        if(!$messageArray)
+        {
+            throw new Exception("NO MESSAGES FOUND OF TYPE:".$messageType);
+        }
+
+        //populate the messagePartsArray with each message
+        $messagePartsArray = $this->RetrieveMessageParts($imapStream,$messageArray);
+
+        //mark messages as read
+        foreach($messageArray as $messageValue)
+        {
+            imap_setflag_full($imapStream,$messageValue,"\\Seen");
+        }
+
+        return $messagePartsArray;
   }
 
 
-  private function RetrieveMessageParts($messageArray)
+  /**
+   * THIS METHOD GETS THE MESSAGE PARTS FROM AN ARRAY OF MESSAGE IDS
+   */
+  private function RetrieveMessageParts($imapStream,$messageArray)
   {
-    //unset messagePartsArray in case this was called already
-    unset($this->messagePartsArray);
-    
-    //populate messagePartsArray
-    foreach($messageArray as $messageValue)
-    {
-      //store the . location and subtype of each mime part
-			$partarray = array();
-			$count = 0;
-			$primarypart = imap_fetchstructure($this->imapStream, $messageValue);
-			if($primarypart->parts)
-			{
-				foreach($primarypart->parts as $mimepart)
-				{
-					$subcount = 0;
-					if($mimepart->parts)
-					{
-						$count+=1;
-						foreach($mimepart->parts as $submimepart)
-						{ 
-              $subsubcount=0;
-              if($submimepart->parts)
-              {
-                $subcount+=1;
-                foreach($submimepart->parts as $subsubmimepart)
+        $messagePartsArray=array();
+        
+        //populate messagePartsArray
+        foreach($messageArray as $messageValue)
+        {
+            //store the . location and subtype of each mime part
+            $partarray = array();
+            $count = 0;
+            $primarypart = imap_fetchstructure($imapStream, $messageValue);
+            if(isset($primarypart->parts))
+            {
+                foreach($primarypart->parts as $mimepart)
                 {
-                  $partarray[($count).".".($subcount).".".($subsubcount+=1)] = $subsubmimepart->subtype;                  
+                    $subcount = 0;
+                    if(isset($mimepart->parts))
+                    {
+                        $count+=1;
+                        foreach($mimepart->parts as $submimepart)
+                        { 
+                            $subsubcount=0;
+                            if(isset($submimepart->parts))
+                            {
+                                $subcount+=1;
+                                foreach($submimepart->parts as $subsubmimepart)
+                                {
+                                    $partarray[($count).".".($subcount).".".($subsubcount+=1)] = $subsubmimepart->subtype;                  
+                                }
+                            }
+                            else
+                            {
+                                $partarray[($count).".".($subcount+=1)] = $submimepart->subtype;
+                            }
+                        }
+                    }
+                    else
+                    {					
+                        $partarray[($count+=1)] = $mimepart->subtype;
+                    }					
                 }
-              }
-              else
-              {
-							  $partarray[($count).".".($subcount+=1)] = $submimepart->subtype;
-              }
-						}
-					}
-					else
-					{					
-						$partarray[($count+=1)] = $mimepart->subtype;
-					}					
-				}
-			}
-			else
-			{
-				$partarray[($count+=1)] = $primarypart->subtype;
-			}
-      
-      $this->messagePartsArray[$messageValue] = $partarray;
-    }
+            }
+            else
+            {
+                $partarray[($count+=1)] = $primarypart->subtype;
+            }
+
+            $messagePartsArray[$messageValue] = $partarray;
+        }
+        
+        return $messagePartsArray;
   }
   
-  public function DisplayMessageParts()
+  /**
+   * This is a utility function that displays the message parts
+   */
+  private function DisplayMessageParts($imapStream,$messagePartsArray)
   {
-    foreach($this->messagePartsArray as $messageValue => $partarray)
-    {
-    
-      echo("MESSAGE #".$messageValue."<BR />");
-      //show subject and from of message     
-      $headerInfo = imap_headerinfo($this->imapStream,$messageValue);
-			echo("<hr><b>Subject:</b>".$headerInfo->subject."<br />");
-      echo("<b>Date:</b>".$headerInfo->date."<br />");
-      echo("<b>From Address:</b>".$headerInfo->fromaddress."<br />");
-      foreach($headerInfo->from as $f)
-      {
-        echo("<b>From:</b>(personal)".$f->personal.",(adl)".$f->adl.",<br />(mailbox)@(host)".$f->mailbox."@".$f->host."<br />");
-      }      
-      
-      echo("<b>Sender Address:</b>".$headerInfo->senderaddress."<br />");
-      foreach($headerInfo->sender as $s)
-      {
-        echo("<b>Sender:</b>(personal)".$s->personal.",(adl)".$s->adl.",<br />(mailbox)@(host)".$s->mailbox."@".$s->host."<br />");
-      }    
-
-      echo("<b>CC Address:</b>".$headerInfo->ccaddress."<br />");
-      if(!is_null($headerInfo->cc))
-      {
-        foreach($headerInfo->cc as $c)
+        foreach($messagePartsArray as $messageValue => $partarray)
         {
-          echo("<b>Return Path:</b>(personal)".$c->personal.",(adl)".$c->adl.",<br />(mailbox)@(host)".$c->mailbox."@".$c->host."<br />");
-        }
-      }
 
-      echo("<b>BCC Address:</b>".$headerInfo->bccaddress."<br />");
-      if(!is_null($headerInfo->bcc))
-      {
-        foreach($headerInfo->bcc as $bc)
-        {
-          echo("<b>Return Path:</b>(personal)".$bc->personal.",(adl)".$bc->adl.",<br />(mailbox)@(host)".$bc->mailbox."@".$bc->host."<br />");
-        }
-      }
+            echo("MESSAGE #".$messageValue."<BR />");
+  
+            //show parts of message     
+            $headerInfo = imap_headerinfo($imapStream,$messageValue);
+            
+            //subject
+            if(isset($headerInfo->subject))
+            {
+                echo("<hr><b>Subject:</b>".$headerInfo->subject."<br />");
+            }
+            
+            //date
+            echo("<b>Date:</b>".$headerInfo->date."<br />");
+            
+            //from
+            echo("<b>From Address:</b>".$headerInfo->fromaddress."<br />");
+            foreach($headerInfo->from as $f)
+            {
+                echo("<b>From:</b>(mailbox)@(host)".$f->mailbox."@".$f->host."<br />");
+            }      
 
-      echo("<b>Return Path Address:</b>".$headerInfo->return_pathaddress."<br />");
-      if(!is_null($headerInfo->return_path))
-      {
-        foreach($headerInfo->return_path as $r)
-        {
-          echo("<b>Return Path:</b>(personal)".$r->personal.",(adl)".$r->adl.",<br />(mailbox)@(host)".$r->mailbox."@".$r->host."<br />");
+            //sender
+            echo("<b>Sender Address:</b>".$headerInfo->senderaddress."<br />");
+            foreach($headerInfo->sender as $s)
+            {
+                echo("<b>Sender:</b>(mailbox)@(host)".$s->mailbox."@".$s->host."<br />");
+            }    
+
+            //show parts of message
+            foreach($partarray as $partid => $subtype)
+            {
+                echo(" Part:".$partid." SubType:".$subtype."<br />");                
+            }
+              
+            echo("<hr>");
         }
-      }
-      
-      $fetchheaderarray = explode("\n",imap_fetchheader($this->imapStream,$messageValue));
-      foreach($fetchheaderarray as $fetchheaderline)
-      {
-        echo("<b>Fetch Header:</b>".$fetchheaderline."<br />");
-      }
-      
-      //show parts of message
-      foreach($partarray as $partid => $subtype)
-      {
-        echo(" Part:".$partid." SubType:".$subtype."<br />");                
-      }
-      echo("<hr>");
-    }
   }
   
-  //serialize header info (subject, from, date) with photo name
-  private function SerializeHeaderInfo($messageValue,$fileName)
+  /**
+   * This method saves the media found in a given message parts array
+   */
+  private function SaveMedia($imapStream,$messagePartsArray)
+  {
+        foreach($messagePartsArray as $messageValue => $partarray)
+        {
+            foreach($partarray as $partid => $subtype)
+            {
+                //only save certain Media subtypes
+                $mediaToSave = array("JPEG","QUICKTIME","GIF","3GPP","PNG","X-M4A");
+                if(in_array($subtype,$mediaToSave))
+                {
+                    
+                    //Set the filename (based on time stamp 
+                    //might get duplicates if multiple jpegs and server is running really fast, so use a fileversion sequence
+                    //and loop till we find a file name that doesn't exist
+
+                    $fileversion=0;
+                    do
+                    {
+                        $fileversion+=1;
+                        if($subtype == "JPEG")
+                        {
+                          $filestring = $this->fileprefix.date('YmdHis').$fileversion.".jpg";
+                        }
+                        if($subtype == "QUICKTIME")
+                        {
+                          $filestring = $this->fileprefix.date('YmdHis').$fileversion.".mov";
+                        }
+                        if($subtype == "X-M4A")
+                        {
+                          $filestring = $this->fileprefix.date('YmdHis').$fileversion.".m4a";
+                        }
+                        if($subtype == "GIF")
+                        {
+                          $filestring = $this->fileprefix.date('YmdHis').$fileversion.".gif";
+                        }              
+                        if($subtype == "3GPP")
+                        {
+                          $filestring = $this->fileprefix.date('YmdHis').$fileversion.".3gp";
+                        }
+                        if($subtype == "PNG")
+                        {
+                          $filestring = $this->fileprefix.date('YmdHis').$fileversion.".png";
+                        }
+                    } while(file_exists($this->filesubdir."/".$filestring));
+
+
+                    //open file for writing
+                    $filewrite = fopen($this->filesubdir."/".$filestring,"w+b");
+                    if($filewrite == FALSE)
+                    {
+                        throw new Exception("COULDNT OPEN FILE:".$filestring." FOR WRITING"."<br />");
+                    }
+
+                    //fetch the body part
+                    $bodystring = imap_fetchbody($imapStream,$messageValue,$partid);
+
+                    //decode the text
+                    $bodystring64 = imap_base64($bodystring);
+
+                    //write the contents
+                    if(fwrite($filewrite,$bodystring64,strlen($bodystring64)))
+                    { 
+                        echo($filestring." SAVED!<br />");
+                    }
+                    else
+                    {
+                        fclose($filewrite);
+
+                        throw new Exception("COULD NOT SAVE".$filestring."<br />");
+                    }
+
+                    //close the file handle
+                    fclose($filewrite);            
+
+                    //save header info with newly created file
+                    $this->SerializeHeaderInfo($imapStream,$messagePartsArray,$messageValue,$filestring);
+
+                    //save small version of image if its gigantic (will save with prefix "small_"
+                    if(($subtype == "JPEG")||($subtype == "GIF")||($subtype == "PNG"))
+                    {
+                        $this->SaveSmallVersionOfImage(1200,$subtype,$filestring);
+                    }
+                    
+       
+                }        
+            }
+
+        }
+    }
+  
+  /**
+   * This method saves the header info to an xml file for later reference
+   * FILE SUBJECT FROM DATE MESSAGEBODY
+   */
+  private function SerializeHeaderInfo($imapStream,$messagePartsArray,$messageValue,$fileName)
   {
     //check if cellphoto.xml exists.  NOTE: THIS IS USED BY CELLPHOTOVIEWFRAME
     if(file_exists("cellphoto.xml"))
@@ -261,21 +383,26 @@ class CellPhotoMail
     }
     
     //get header info
-    $headerInfo = imap_headerinfo($this->imapStream,$messageValue);
+    $headerInfo = imap_headerinfo($imapStream,$messageValue);
+    
+    //get message body
+    $messageBody = $this->ShowAllPlainAndHtmlParts($imapStream,$messagePartsArray,$messageValue);
     
     //create one "record"
     $photoElement = $DOMDOC->createElement('photo');
     $photoNode = $ROOTNODE->appendChild($photoElement);
 
     $fileElement = $DOMDOC->createElement('file',$fileName);
-    $subjectElement = $DOMDOC->createElement('subject',$headerInfo->subject);
+    $subjectElement = $DOMDOC->createElement('subject',isset($headerInfo->subject)?$headerInfo->subject:'');
     $fromElement = $DOMDOC->createElement('from',$headerInfo->fromaddress);
     $dateElement = $DOMDOC->createElement('date',$headerInfo->date);
+    $bodyElement = $DOMDOC->createElement('body',$messageBody);
 
     $photoNode->appendChild($fileElement);
     $photoNode->appendChild($subjectElement);
     $photoNode->appendChild($fromElement);
     $photoNode->appendChild($dateElement);
+    $photoNode->appendChild($bodyElement);
 
     //save dom doc to file
     $documentSaved = $DOMDOC->save("cellphoto.xml");
@@ -284,11 +411,17 @@ class CellPhotoMail
   
   }
   
-  
-  public function ShowPlainAndHtmlParts()
+  /**
+   * This method is intended to find the body or text of all messages.
+   * If a $targetMessageValue is specified, it returns the body of that one
+   */
+  private function ShowAllPlainAndHtmlParts($imapStream,$messagePartsArray,$targetMessageValue)
   {
+    //body found for the target message value
+    $targetMessageValueBody="";
+    
     //cycle through all messages
-    foreach($this->messagePartsArray as $messageValue => $partarray)
+    foreach($messagePartsArray as $messageValue => $partarray)
     {
       
       //cycle through the html and plain text parts of each message
@@ -310,173 +443,95 @@ class CellPhotoMail
           }
           
           //fetch body bart of the message 
-          echo(imap_fetchbody($this->imapStream,$messageValue,$partid)."<hr>");
+          $bodyPart = imap_fetchbody($imapStream,$messageValue,$partid);
+          
+          echo($bodyPart."<br />");
+          
+          //get the target messages value
+          if($targetMessageValue===$messageValue)
+          {
+            echo("MESSAGE:".$bodyPart."<br />");
+            $targetMessageValueBody.="MESSAGE:".$bodyPart." ";
+          }
+          
         }
       }
     }
+    
+    return $targetMessageValueBody;
   }
   
-  public function SaveMedia()
+  /**
+   * This function saves a small version of an image if either dimension is greater than $maxDimension
+   */
+  private function SaveSmallVersionOfImage($maxDimension,$subtype,$filestring)
   {
-    foreach($this->messagePartsArray as $messageValue => $partarray)
-    {
-     foreach($partarray as $partid => $subtype)
-      {
-        //only save certain Media subtypes
-        $mediaToSave = array("JPEG","QUICKTIME","GIF","3GPP","PNG","X-M4A");
-        if(in_array($subtype,$mediaToSave))
-        {
-          try
-					{
-            //Set the filename (based on time stamp 
-            //might get duplicates if multiple jpegs and server is running really fast)
-            
-            $fileversion=0;
-            do
-            {
-              $fileversion+=1;
-              if($subtype == "JPEG")
-              {
-                $filestring = $this->fileprefix.date('YmdHis').$fileversion.".jpg";
-              }
-              if($subtype == "QUICKTIME")
-              {
-                $filestring = $this->fileprefix.date('YmdHis').$fileversion.".mov";
-              }
-              if($subtype == "X-M4A")
-              {
-                $filestring = $this->fileprefix.date('YmdHis').$fileversion.".m4a";
-              }
-              if($subtype == "GIF")
-              {
-                $filestring = $this->fileprefix.date('YmdHis').$fileversion.".gif";
-              }              
-              if($subtype == "3GPP")
-              {
-                $filestring = $this->fileprefix.date('YmdHis').$fileversion.".3gp";
-              }
-              if($subtype == "PNG")
-              {
-                $filestring = $this->fileprefix.date('YmdHis').$fileversion.".png";
-              }
-            } while(file_exists($this->filesubdir."/".$filestring));
-            
-            
-            //open file for writing
-						$filewrite = fopen($this->filesubdir."/".$filestring,"w+b");
-						if($filewrite == FALSE)
-						{
-							echo("Couldnt open file ".$filestring." for writing"."<br />");
-							continue;						
-						}
-					  
-            //fetch the body part
-						$bodystring = imap_fetchbody($this->imapStream,$messageValue,$partid);
-						
-						//decode the text
-						$bodystring64 = imap_base64($bodystring);
-            
-            //write the contents
-						if(fwrite($filewrite,$bodystring64,strlen($bodystring64)))
-						{ 
-              echo($filestring." saved!<br />");
-						}
-						else
-						{
-							echo("ERROR".$filestring." not saved :(<br />");
-              fclose($filewrite);
-              return;
-						}
-						
-            //close the file handle
-            fclose($filewrite);            
-            
-            //save header info with newly created file
-            $this->SerializeHeaderInfo($messageValue,$filestring);
-            
-            //resize images before posting to omlb
-            if(($subtype == "JPEG")||($subtype == "GIF")||($subtype == "PNG"))
-            {
-              //check if file needs to be resized (omlb photos have to be under 1200x1200)
-              $max = 1200;
-              $sizeinfo = getimagesize($this->filesubdir."/".$filestring);
-				      $width=$sizeinfo[0];
-			    	  $height=$sizeinfo[1];
-              if(($width>$max)||($height>$max))
-              {
-                //set the new width and height
-                if($width > $height)
-				        {
-					        $newwidth=$max;
-					        $newheight=($max/$width)*$height;
-				        }
-				        else if ($height > $width)
-				        {
-					        $newheight=$max;
-					        $newwidth=($max/$height)*$width;
-				        }
-				        else
-				        {
-					        $newwidth=$newheight=$max;
-				        }
-                
-                //increase memory size in case this is a 1.0+ jpg
-                ini_set('memory_limit','100M');
-                
-                //create small image for resize destination
-				        $small = imagecreatetruecolor($newwidth, $newheight);
-                
-                //load image data for resize source
-                switch($subtype)
-                {
-                  case "JPEG":
-                    $source = imagecreatefromjpeg($this->filesubdir."/".$filestring);
-                    break;
-                  case "GIF":
-                    $source = imagecreatefromgif($this->filesubdir."/".$filestring);
-                    break;
-                  case "PNG":
-                    $source = imagecreatefrompng($this->filesubdir."/".$filestring);
-                    break;
-                }
-                    
-				        // Resize
-				        imagecopyresized($small, $source, 0, 0, 0, 0, $newwidth, $newheight, $width, $height);
-        	                
-				        // Output small image to a file
-                switch($subtype)
-                {
-                  case "JPEG":
-                    $source = imagejpeg($small,$this->filesubdir."/small_".$filestring);
-                    break;
-                  case "GIF":
-                    $source = imagegif($small,$this->filesubdir."/small_".$filestring);
-                    break;
-                  case "PNG":
-                    $source = imagepng($small,$this->filesubdir."/small_".$filestring);
-                    break;
-                }           
-              
-                //set $filestring equal to "small_" version before posting to omlb
-                $filestring = "small_".$filestring;
-              }
-            }
-            
-            
-            //post file to omlb
-            //PostToOmlb("http://jaemzware.com/cellphoto/".$filestring);            
-                        						
-					}
-					catch (Exception $eX)
-					{
-						echo ("Exception:".$eX->getMessage()."<br />");					
-					}        
-        }        
-      }
-      
-    }
-  }
-  
+    
+    $sizeinfo = getimagesize($this->filesubdir."/".$filestring);
+    $width=$sizeinfo[0];
+    $height=$sizeinfo[1];
 
+    if(($width>$maxDimension)||($height>$maxDimension))
+    {
+        echo('CREATING SMALL VERSION OF IMAGE:'.$filestring."<br />");
+        
+        //set the new width and height
+        if($width > $height)
+        {
+            $newwidth=$maxDimension;
+            $newheight=($maxDimension/$width)*$height;
+        }
+        else if ($height > $width)
+        {
+            $newheight=$maxDimension;
+            $newwidth=($maxDimension/$height)*$width;
+        }
+        else
+        {
+            $newwidth=$newheight=$maxDimension;
+        }
+
+        //increase memory size in case this is a 1.0+ jpg
+        ini_set('memory_limit','100M');
+
+        //create small image for resize destination
+        $small = imagecreatetruecolor($newwidth, $newheight);
+
+        //load image data for resize source
+        switch($subtype)
+        {
+          case "JPEG":
+            $source = imagecreatefromjpeg($this->filesubdir."/".$filestring);
+            break;
+          case "GIF":
+            $source = imagecreatefromgif($this->filesubdir."/".$filestring);
+            break;
+          case "PNG":
+            $source = imagecreatefrompng($this->filesubdir."/".$filestring);
+            break;
+        }
+
+        // Resize
+        imagecopyresized($small, $source, 0, 0, 0, 0, $newwidth, $newheight, $width, $height);
+
+        // Output small image to a file
+        switch($subtype)
+        {
+          case "JPEG":
+            imagejpeg($small,$this->filesubdir."/small_".$filestring);
+            break;
+          case "GIF":
+            imagegif($small,$this->filesubdir."/small_".$filestring);
+            break;
+          case "PNG":
+            imagepng($small,$this->filesubdir."/small_".$filestring);
+            break;
+        }           
+
+        //set $filestring equal to "small_" version before posting to omlb
+        $filestring = "small_".$filestring;
+    }
+    
+  }
+ 
 }
-?>

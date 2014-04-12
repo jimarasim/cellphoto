@@ -125,11 +125,18 @@ if ($handle = opendir($cellphotodir))
 	closedir($handle);
 }
 
+//check if any files were found
+if(count($files)<=0)
+{
+    echo('NO IMAGES FOUND');
+    return;
+}
+
 ksort($files);	
 
 //only display 20 images at a time
 $lastimage = count($files)-1;
-$startimage = $_GET['start']?$_GET['start']:0;
+$startimage = isset($_GET['start'])?$_GET['start']:0;
 $endimage = ($lastimage>($startimage+19))?$startimage+19:$lastimage;
 
 //provide linke for previous page of images
@@ -321,7 +328,6 @@ foreach($files as $increment => $name)
 }
 echo("</tr>");	
 ?>
-</table>
 </center>
 </body>
 </html>
