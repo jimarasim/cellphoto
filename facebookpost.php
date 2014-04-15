@@ -14,10 +14,12 @@ $config = array(
             'allowSignedRequest' => false, // optional, but should be set to false for non-canvas apps
         );
 
-$loginparams = array(
+$loginParams = array(
                 'scope' => 'read_stream, friends_likes',
                 'redirect_uri' => GetCurrentUrl()
             );
+
+$logoutParams = array( 'next' => GetCurrentUrl().'?logout=true' );
 
 $facebook = new Facebook($config);
 
@@ -27,20 +29,44 @@ $facebook = new Facebook($config);
 <?php
     try
     {
-       //get facebook user credentials
-        $user_profile = $facebook->api('/me','GET');
-        echo "Name: " . $user_profile['name'];
+        //check if we just logged out
+        if(isset($_GET['logout'])){
+            if($_GET['logout']=='true'){
+                session_destroy();   
+            }
+        }
+        //get the user id
+        $user_id = $facebook->getUser();
+        
+        if($user_id)
+        {
+            //dispaly user id
+            echo("User ID:".$user_id."<br />");
+            
+            //get facebook user credentials
+            $user_profile = $facebook->api('/me','GET');
+            echo "Name: " . $user_profile['name']."<br />";
+            
+            //logout link
+            $logoutUrl = $facebook->getLogoutUrl($logoutParams);
+            echo("<a href='".$logoutUrl."'>Facebook Logout</a><br />");
+        }
+        else    
+        {
+            echo("NO USER ID<br />");
+            LoginFacebook($facebook,$loginParams);
+        }
     }
     catch(FacebookApiException $fex)
     {
-        LoginFacebook($facebook,$loginparams);
+        echo("NO PROFILE<br />");
+        LoginFacebook($facebook,$loginParams);
     }
     catch(Exception $ex)
     {
         echo($ex->getMessage());
     }
 
-    echo("FACEBOOK APP!");
 ?>
 </body></html>
 
@@ -55,16 +81,19 @@ function GetCurrentUrl()
     $REQUEST_URI = filter_input(INPUT_SERVER, 'REQUEST_URI');
     
     $protocol = (!empty($HTTPS) && $HTTPS == 'on') ?'htts://':'http://';
-    return ($protocol.$HTTP_HOST.$REQUEST_URI);
+    
+    $currentUrl = $protocol.$HTTP_HOST.$REQUEST_URI;
+    
+    return $currentUrl;
 }
 
 /**
  * this function logs into facebook
  */
-function LoginFacebook($facebook,$loginparams)
+function LoginFacebook($facebook,$loginParams)
 {
-    $loginurl = $facebook->getLoginUrl($loginparams);
-    header("Location:".$loginurl);
+    $loginurl = $facebook->getLoginUrl($loginParams);
+    echo("Please Login through Facebook:<a href='".$loginurl."'>Facebook Login</a><br />");
 }
 
 
