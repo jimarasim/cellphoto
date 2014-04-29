@@ -17,9 +17,15 @@ class CellPhotoMail
   function __construct($server,$uid,$pwd,$fileprefix,$filesubdir)
   { 
     //email server settings
-    $this->server = is_null($server)?"{imap.gmail.com:993/imap/ssl}INBOX":$server; 
-    $this->uid = is_null($uid)?"jaemzware@gmail.com":$uid;
-    $this->pwd = is_null($pwd)?"8googlegoogle":$pwd;  
+    //dreamhost  
+    $this->server = is_null($server)?"{mail.seattlerules.com:993/imap/ssl/novalidate-cert}INBOX":$server; 
+    $this->uid = is_null($uid)?"cellphoto@seattlerules.com":$uid;
+    $this->pwd = is_null($pwd)?"J@emzRulz":$pwd;  
+      
+    //gmail
+//    $this->server = is_null($server)?"{imap.gmail.com:993/imap/ssl}INBOX":$server; 
+//    $this->uid = is_null($uid)?"jaemzware@gmail.com":$uid;
+//    $this->pwd = is_null($pwd)?"8googlegoogle":$pwd;  
     
     //cell photo file name
     $this->fileprefix = is_null($fileprefix)?"JAEMZBOT":$fileprefix;

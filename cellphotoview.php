@@ -101,7 +101,7 @@ function setstartimage()
 <body class="visible" onload="javascript:preload_images();">
 
 <center>
-<h3>Text photos to jaemzware@gmail.com</h3>
+<h3>Cell Photos: cellphoto@seattlerules.com</h3>
 <?php
 $cellphotodir = "cellphoto";
 $files = array();
