@@ -1,96 +1,86 @@
-<?php
-include '../facebook-php-sdk/src/facebook.php'; 
- 
-require_once('../facebook-php-sdk/src/facebook.php');
-
-
-$config = array(
-            'appId' => '709181395771740',
-            'secret' => '7c288e7bd60860cd1306263267ff17a6',
-            'fileUpload' => false, // optional
-            'allowSignedRequest' => false, // optional, but should be set to false for non-canvas apps
-        );
-
-$loginParams = array(
-                'scope' => 'read_stream, friends_likes',
-                'redirect_uri' => GetCurrentUrl()
-            );
-
-$logoutParams = array( 'next' => GetCurrentUrl().'?logout=true' );
-
-$facebook = new Facebook($config);
-
-?>
-
-<html><head><title></title></head><body>
-<?php
-    try
-    {
-        //check if we just logged out
-        if(isset($_GET['logout'])){
-            if($_GET['logout']=='true'){
-                session_destroy();   
-            }
-        }
-        //get the user id
-        $user_id = $facebook->getUser();
+<html>
+<head>
+    <title>cellphoto - facebook</title>
+    
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+</head>
+<body>
+<script>
+    window.fbAsyncInit = function() {
+        FB.init({
+          appId      : '709181395771740',
+          xfbml      : false,
+          version    : 'v2.0',
+          status     : true
+        });
         
-        if($user_id)
-        {
-            //dispaly user id
-            echo("User ID:".$user_id."<br />");
-            
-            //get facebook user credentials
-            $user_profile = $facebook->api('/me','GET');
-            echo "Name: " . $user_profile['name']."<br />";
-            
-            //logout link
-            $logoutUrl = $facebook->getLogoutUrl($logoutParams);
-            echo("<a href='".$logoutUrl."'>Facebook Logout</a><br />");
-        }
-        else    
-        {
-            echo("NO USER ID<br />");
-            LoginFacebook($facebook,$loginParams);
-        }
-    }
-    catch(FacebookApiException $fex)
+        $('#fbstatuslist').append("<li>fb initialized</li>");
+        
+        checkLoginStatus();
+    };
+
+    //LOADS THE SDK
+    (function(d, s, id){
+     var js, fjs = d.getElementsByTagName(s)[0];
+     if (d.getElementById(id)) {return;}
+     js = d.createElement(s); js.id = id;
+     js.src = "//connect.facebook.net/en_US/sdk.js";
+     fjs.parentNode.insertBefore(js, fjs);
+    }(document, 'script', 'facebook-jssdk'));
+    
+    function checkLoginStatus()
     {
-        echo("NO PROFILE<br />");
-        LoginFacebook($facebook,$loginParams);
+        $('#analogplaylist').empty();
+        //CHECK if we're logged in 
+        FB.getLoginStatus(function(response) {
+        if (response.status === 'connected') {
+          // the user is logged in and has authenticated your
+          // app, and response.authResponse supplies
+          // the user's ID, a valid access token, a signed
+          // request, and the time the access token 
+          // and signed request each expire
+          var uid = response.authResponse.userID;
+          var accessToken = response.authResponse.accessToken;
+
+          $('#fbstatuslist').empty();
+          $('#fbstatuslist').append("<li>UID:"+uid+"</li>");
+
+          FB.api('/me', {fields: 'last_name,first_name'}, function(response) {
+            $('#fbstatuslist').append("<li>"+response.first_name+" "+response.last_name+"</li>");
+          });
+
+        } else if (response.status === 'not_authorized') {
+          // the user is logged in to Facebook, 
+          // but has not authenticated your app
+          $('#fbstatuslist').append("<li>UNAUTHORIZED</li>");
+          $('#fbstatuslist').append("<li><input type='button' onclick='loginToFacebook()' value='Login to Facebook' /></li>");
+
+        } else {
+          $('#fbstatuslist').append("<li>NOT LOGGED IN</li>");
+          $('#fbstatuslist').append("<li><input type='button' onclick='loginToFacebook()' value='Login to Facebook'  /></li>");
+        }
+       });
     }
-    catch(Exception $ex)
+    
+    function loginToFacebook()
     {
-        echo($ex->getMessage());
+        FB.login(function(response) {
+            if (response.authResponse) {
+              $('#fbstatuslist').append('Welcome!  Fetching your information.... ');
+              FB.api('/me', function(response) {
+                checkLoginStatus();
+              });
+            } else {
+                $('#fbstatuslist').empty();
+                $('#fbstatuslist').append("<li>USER CANCELLED LOGIN OR DID NOT AUTHORIZE</li>");
+            }
+          });
     }
+</script>
+<ul id="fbstatuslist">
+</ul>
+</body>
+</html>
 
-?>
-</body></html>
-
-<?php
-/**
- * this function gets the current url
- */
-function GetCurrentUrl()
-{
-    $HTTPS = filter_input(INPUT_SERVER, 'HTTPS');
-    $HTTP_HOST = filter_input(INPUT_SERVER, 'HTTP_HOST');
-    $REQUEST_URI = filter_input(INPUT_SERVER, 'REQUEST_URI');
-    
-    $protocol = (!empty($HTTPS) && $HTTPS == 'on') ?'htts://':'http://';
-    
-    $currentUrl = $protocol.$HTTP_HOST.$REQUEST_URI;
-    
-    return $currentUrl;
-}
-
-/**
- * this function logs into facebook
- */
-function LoginFacebook($facebook,$loginParams)
-{
-    $loginurl = $facebook->getLoginUrl($loginParams);
-    echo("Please Login through Facebook:<a href='".$loginurl."'>Facebook Login</a><br />");
-}
 
 
