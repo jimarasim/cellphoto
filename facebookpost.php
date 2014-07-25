@@ -30,7 +30,7 @@
     
     function checkAuthenticationStatus()
     {
-        $('#analogplaylist').empty();
+//        $('#analogplaylist').empty();
         //CHECK if we're logged in 
         FB.getLoginStatus(function(response) {
         if (response.status === 'connected') {
@@ -42,7 +42,7 @@
           var uid = response.authResponse.userID;
           var accessToken = response.authResponse.accessToken;
 
-          $('#fbstatuslist').empty();
+//          $('#fbstatuslist').empty();
           $('#fbstatuslist').append("<li>UID:"+uid+"</li>");
           $('#fbstatuslist').append("<li>TOKEN:"+accessToken+"</li>");
           
@@ -74,7 +74,7 @@
                 checkAuthenticationStatus();
               });
             } else {
-                $('#fbstatuslist').empty();
+//                $('#fbstatuslist').empty();
                 $('#fbstatuslist').append("<li>USER CANCELLED LOGIN OR DID NOT AUTHORIZE</li>");
             }
           }, {scope: 'publish_actions'});
@@ -87,7 +87,7 @@
           if (!response || response.error) {
             $('#fbstatuslist').append('<li>Post Error occured:'+response.error.message+'</li>');
           } else {
-            $('#fbstatuslist').append('<li>Post ID: ' + response+'</li>');
+            $('#fbstatuslist').append('<li>Post ID: ' + response.id+'</li>');
           }
         });
     }
