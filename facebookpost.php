@@ -16,7 +16,7 @@
         
         $('#fbstatuslist').append("<li>fb initialized</li>");
         
-        checkLoginStatus();
+        checkAuthenticationStatus();
     };
 
     //LOADS THE SDK
@@ -28,7 +28,7 @@
      fjs.parentNode.insertBefore(js, fjs);
     }(document, 'script', 'facebook-jssdk'));
     
-    function checkLoginStatus()
+    function checkAuthenticationStatus()
     {
         $('#analogplaylist').empty();
         //CHECK if we're logged in 
@@ -44,9 +44,11 @@
 
           $('#fbstatuslist').empty();
           $('#fbstatuslist').append("<li>UID:"+uid+"</li>");
-
+          $('#fbstatuslist').append("<li>TOKEN:"+accessToken+"</li>");
+          
           FB.api('/me', {fields: 'last_name,first_name'}, function(response) {
-            $('#fbstatuslist').append("<li>"+response.first_name+" "+response.last_name+"</li>");
+                $('#fbstatuslist').append("<li>"+response.first_name+" "+response.last_name+"</li>");
+                postStatusToFacebook('Dude, sk8creteordie');
           });
 
         } else if (response.status === 'not_authorized') {
@@ -58,6 +60,7 @@
         } else {
           $('#fbstatuslist').append("<li>NOT LOGGED IN</li>");
           $('#fbstatuslist').append("<li><input type='button' onclick='loginToFacebook()' value='Login to Facebook'  /></li>");
+        
         }
        });
     }
@@ -68,14 +71,27 @@
             if (response.authResponse) {
               $('#fbstatuslist').append('Welcome!  Fetching your information.... ');
               FB.api('/me', function(response) {
-                checkLoginStatus();
+                checkAuthenticationStatus();
               });
             } else {
                 $('#fbstatuslist').empty();
                 $('#fbstatuslist').append("<li>USER CANCELLED LOGIN OR DID NOT AUTHORIZE</li>");
             }
-          });
+          }, {scope: 'publish_actions'});
     }
+    
+    function postStatusToFacebook(statusMessage){
+        var timestamp = new Date();
+        statusMessage += '('+timestamp+')';
+        FB.api('/me/feed', 'post', { message: statusMessage }, function(response) {
+          if (!response || response.error) {
+            $('#fbstatuslist').append('<li>Post Error occured:'+response.error.message+'</li>');
+          } else {
+            $('#fbstatuslist').append('<li>Post ID: ' + response+'</li>');
+          }
+        });
+    }
+    
 </script>
 <ul id="fbstatuslist">
 </ul>
