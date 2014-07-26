@@ -48,7 +48,7 @@
           
           FB.api('/me', {fields: 'last_name,first_name'}, function(response) {
                 $('#fbstatuslist').append("<li>"+response.first_name+" "+response.last_name+"</li>");
-                postStatusToFacebook('Dude, sk8creteordie');
+                postStatusToFacebookOmlb('sk8creteordie http://seattlerules.com/cellphoto/cellphoto/JAEMZBOT201404191310031.jpg');
           });
 
         } else if (response.status === 'not_authorized') {
@@ -77,13 +77,30 @@
 //                $('#fbstatuslist').empty();
                 $('#fbstatuslist').append("<li>USER CANCELLED LOGIN OR DID NOT AUTHORIZE</li>");
             }
-          }, {scope: 'publish_actions'});
+          }, {scope: 'publish_actions, user_groups'});
     }
     
     function postStatusToFacebook(statusMessage){
         var timestamp = new Date();
         statusMessage += '('+timestamp+')';
         FB.api('/me/feed', 'post', { message: statusMessage }, function(response) {
+          if (!response || response.error) {
+            $('#fbstatuslist').append('<li>Post Error occured:'+response.error.message+'</li>');
+          } else {
+            $('#fbstatuslist').append('<li>Post ID: ' + response.id+'</li>');
+          }
+        });
+    }
+    
+    function postStatusToFacebookOmlb(statusMessage){
+        //omlb group id: 191968037495092
+        //get this by:
+        //1. go to graph api explorer: https://developers.facebook.com/tools/explorer
+        //2. get access token, and check user_groups
+        //3. plug in the node: me/groups
+        var timestamp = new Date();
+        statusMessage += '('+timestamp+')';
+        FB.api('/191968037495092/feed', 'post', { message: statusMessage }, function(response) {
           if (!response || response.error) {
             $('#fbstatuslist').append('<li>Post Error occured:'+response.error.message+'</li>');
           } else {
