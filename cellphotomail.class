@@ -5,17 +5,23 @@ date_default_timezone_set('America/Los_Angeles');
 
 class CellPhotoMail
 {
+  //provide echoing flag
+  private $verboseOn=TRUE;
+  
   //email authentication
   private $server; 
   private $uid;
   private $pwd;
   
   //cell photo subdirectory
-  private $filesubdir;
+  private $filesubdir="cellphoto";
   //cell photo file name prefix
-  private $fileprefix;
+  private $fileprefix="sk8crete";
   
-  function __construct($server,$uid,$pwd,$fileprefix,$filesubdir)
+  //array to save paths of images saved
+  private $imagePaths;
+  
+  function __construct($server,$uid,$pwd)
   { 
     //email server settings
     //dreamhost  
@@ -27,14 +33,21 @@ class CellPhotoMail
 //    $this->server = is_null($server)?"{imap.gmail.com:993/imap/ssl}INBOX":$server; 
 //    $this->uid = is_null($uid)?"jaemzware@gmail.com":$uid;
 //    $this->pwd = is_null($pwd)?"8googlegoogle":$pwd;  
-    
-    //cell photo file name
-    $this->fileprefix = is_null($fileprefix)?"JAEMZBOT":$fileprefix;
-    
-    //cell photo subdirectory
-    $this->filesubdir = is_null($filesubdir)?"cellphoto":$filesubdir;
-    
-    echo('INSTANTIATED<br />');
+  }
+  
+  /**
+   * This method gets image paths of those found and saved
+   */
+  public function getJsonImagePaths()
+  {
+      //TURN off echoing, since we only want to return json for the file paths
+      $this->verboseOn=FALSE;
+      
+      //process the photos
+      $this->ProcessPhotos();
+      
+      //write out the json array
+      return json_encode($this->imagePaths);
   }
   
   /**
@@ -60,12 +73,13 @@ class CellPhotoMail
           $this->SaveMedia($imapStream,$messagePartsArray);
           
           //close the stream
-          echo('CLOSE CONNECTION<br />');
+          if($this->verboseOn)echo('CLOSE CONNECTION<br />');
+          
           imap_close($imapStream);
       } 
       catch (Exception $ex) 
       {
-          echo('EXCEPTION:'.$ex->getMessage().'<br />');
+          if($this->verboseOn)echo('EXCEPTION:'.$ex->getMessage().'<br />');
       }
   }
   
@@ -94,7 +108,7 @@ class CellPhotoMail
       }
       
       
-      echo('VERIFIED ALL DIRECTORIES ARE WRITEABLE<br />');
+      if($this->verboseOn)echo('VERIFIED ALL DIRECTORIES ARE WRITEABLE<br />');
       
   }
   
@@ -103,7 +117,7 @@ class CellPhotoMail
    */
   private function Connect()
   {
-        echo('CONNECT'.$this->server.'<br />');
+        if($this->verboseOn)echo('CONNECT'.$this->server.'<br />');
 
         //open stream to email inbox
         $imapStream = imap_open($this->server, $this->uid, $this->pwd);
@@ -121,7 +135,7 @@ class CellPhotoMail
             throw new Exception($imapErrors);
         }
 
-        echo('CONNECTED<BR />');
+        if($this->verboseOn)echo('CONNECTED<BR />');
 
         //give back the open imapStream
         return $imapStream;
@@ -132,7 +146,7 @@ class CellPhotoMail
    */
   private function GetUnseenMessages($imapStream)
   {
-        echo('GET UNSEEN MESSAGES<br />');
+        if($this->verboseOn)echo('GET UNSEEN MESSAGES<br />');
         
         $messagePartsArray = $this->GetMessages($imapStream,'UNSEEN');
         
@@ -144,7 +158,7 @@ class CellPhotoMail
    */
   private function GetMessages($imapStream,$messageType)
   {
-        echo('GET MESSAGE IDS<br />');
+        if($this->verboseOn)echo('GET MESSAGE IDS<br />');
         
         //stream opened, get message ids of $messageType
         $messageArray = imap_search($imapStream,$messageType);
@@ -232,7 +246,7 @@ class CellPhotoMail
         foreach($messagePartsArray as $messageValue => $partarray)
         {
 
-            echo("MESSAGE#".$messageValue."<BR />");
+            if($this->verboseOn)echo("MESSAGE#".$messageValue."<BR />");
   
             //show parts of message     
             $headerInfo = imap_headerinfo($imapStream,$messageValue);
@@ -240,30 +254,30 @@ class CellPhotoMail
             //subject
             if(isset($headerInfo->subject))
             {
-                echo("<b>Subject:</b>".$headerInfo->subject."<br />");
+                if($this->verboseOn)echo("<b>Subject:</b>".$headerInfo->subject."<br />");
             }
             
             //date
-            echo("<b>Date:</b>".$headerInfo->date."<br />");
+            if($this->verboseOn)echo("<b>Date:</b>".$headerInfo->date."<br />");
             
             //from
-            echo("<b>From Address:</b>".$headerInfo->fromaddress."<br />");
+            if($this->verboseOn)echo("<b>From Address:</b>".$headerInfo->fromaddress."<br />");
             foreach($headerInfo->from as $f)
             {
-                echo("<b>From:</b>(mailbox)@(host)".$f->mailbox."@".$f->host."<br />");
+                if($this->verboseOn)echo("<b>From:</b>(mailbox)@(host)".$f->mailbox."@".$f->host."<br />");
             }      
 
             //sender
-            echo("<b>Sender Address:</b>".$headerInfo->senderaddress."<br />");
+            if($this->verboseOn)echo("<b>Sender Address:</b>".$headerInfo->senderaddress."<br />");
             foreach($headerInfo->sender as $s)
             {
-                echo("<b>Sender:</b>(mailbox)@(host)".$s->mailbox."@".$s->host."<br />");
+                if($this->verboseOn)echo("<b>Sender:</b>(mailbox)@(host)".$s->mailbox."@".$s->host."<br />");
             }    
 
             //show parts of message
             foreach($partarray as $partid => $subtype)
             {
-                echo(" Part:".$partid." SubType:".$subtype."<br />");                
+                if($this->verboseOn)echo(" Part:".$partid." SubType:".$subtype."<br />");                
             }
               
         }
@@ -334,7 +348,13 @@ class CellPhotoMail
                     //write the contents
                     if(fwrite($filewrite,$bodystring64,strlen($bodystring64)))
                     { 
-                        echo($filestring." SAVED!<br />");
+                        //get the full file path
+                        $lastSlashPosition = strripos($this->GetCurrentUrl(),'/');
+                        $fullFilePath=substr_replace($this->GetCurrentUrl(),$this->filesubdir."/".$filestring,$lastSlashPosition+1);
+                        
+                        $this->imagePaths[]=array("photo"=>$fullFilePath);
+                        
+                        if($this->verboseOn)echo($fullFilePath." SAVED!<br />");
                     }
                     else
                     {
@@ -368,7 +388,7 @@ class CellPhotoMail
   private function SerializeHeaderInfo($imapStream,$messagePartsArray,$messageValue,$fileName)
   {
       
-    echo("SERIALIZING MESSAGE#:".$messageValue."<br />");
+    if($this->verboseOn)echo("SERIALIZING MESSAGE#:".$messageValue."<br />");
     
     //check if cellphoto.xml exists.  NOTE: THIS IS USED BY CELLPHOTOVIEWFRAME
     if(file_exists("cellphoto.xml"))
@@ -464,7 +484,7 @@ class CellPhotoMail
 
     if(($width>$maxDimension)||($height>$maxDimension))
     {
-        echo('CREATING SMALL VERSION OF IMAGE:small_'.$filestring."<br />");
+        if($this->verboseOn)echo('CREATING SMALL VERSION OF IMAGE:small_'.$filestring."<br />");
         
         //set the new width and height
         if($width > $height)
@@ -523,6 +543,22 @@ class CellPhotoMail
         $filestring = "small_".$filestring;
     }
     
+  }
+  
+   /**
+   * this function gets the current url
+   */
+  private function GetCurrentUrl()
+  {
+      $HTTPS = filter_input(INPUT_SERVER, 'HTTPS');
+      $HTTP_HOST = filter_input(INPUT_SERVER, 'HTTP_HOST');
+      $REQUEST_URI = filter_input(INPUT_SERVER, 'REQUEST_URI');
+
+      $protocol = (!empty($HTTPS) && $HTTPS == 'on') ?'htts://':'http://';
+
+      $currentUrl = $protocol.$HTTP_HOST.$REQUEST_URI;
+
+      return $currentUrl;
   }
   
   
