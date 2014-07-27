@@ -120,12 +120,29 @@
     }
     
     /**
+     * This method will upload a photo on the users behalf
+     * @param {type} imageUrl
+     * @returns {undefined}     */
+    function uploadPhotoToFacebook(imageUrl){
+        var timestamp = new Date();
+        
+        FB.api('/me/photos', 'post', { url: imageUrl }, function(response) {
+          if (!response || response.error) {
+            $('#fbstatuslist').append('<li>uploadPhotoToFacebook Error occured:'+response.error.message+' '+timestamp+'</li>');
+            stopInterval();
+          } else {
+            $('#fbstatuslist').append('<li>uploadPhotoToFacebook ID: ' + response.id + ' '+timestamp+'</li>');
+          }
+        });
+    }
+    
+    /**
      * This method will post a status on the users behalf, with a timestamp
      * @param {type} statusMessage
      * @returns {undefined}     */
     function postStatusToFacebook(statusMessage){
         var timestamp = new Date();
-//        statusMessage += '('+timestamp+')';
+        
         FB.api('/me/feed', 'post', { message: statusMessage }, function(response) {
           if (!response || response.error) {
             $('#fbstatuslist').append('<li>postStatusToFacebook Error occured:'+response.error.message+' '+timestamp+'</li>');
@@ -185,8 +202,21 @@
             if(imageJson!==null)
             {
                 $.each( imageJson, function( key, val ) {
-                    $("#fbstatuslist").append("<li>Posting:<a href='"+val.photo+"' target='_blank'>"+val.photo+"</a></li>");
-                    postStatusToFacebook(val.photo);
+                    var photoString = val.photo;
+                    $("#fbstatuslist").append("<li>Posting:<a href='"+photoString+"' target='_blank'>"+photoString+"</a></li>");
+                    
+                    if((photoString.indexOf(".jpg")>-1)||
+                            (photoString.indexOf(".png")>-1)||
+                            (photoString.indexOf(".gif")>-1))
+                    {
+                        uploadPhotoToFacebook(photoString);
+                    }
+                    else
+                    {
+                        postStatusToFacebook(photoString);
+                    }
+                    
+                    
                   });   
             }
             else{
