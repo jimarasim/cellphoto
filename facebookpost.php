@@ -126,7 +126,7 @@
     function uploadPhotoToFacebook(imageUrl){
         var timestamp = new Date();
         
-        FB.api('/me/photos', 'post', { url: imageUrl }, function(response) {
+        FB.api('/me/photos', 'post', { url: imageUrl, name: imageUrl }, function(response) {
           if (!response || response.error) {
             $('#fbstatuslist').append('<li>uploadPhotoToFacebook Error occured:'+response.error.message+' '+timestamp+'</li>');
             stopInterval();
