@@ -158,6 +158,19 @@
     }
     
     
+    /**
+     * This method merely serves to keep the facebook session alive, so it does not timeout
+     * @returns {undefined}     */
+    function facebookSessionKeepAlive(){
+        var timestamp = new Date();
+        statusMessage += '('+timestamp+')';
+        FB.api('/me', {fields: 'last_name,first_name'}, function(response) {
+          if (!response || response.error) {
+            $('#fbstatuslist').append('<li>facebookSessionKeepAlive Error occured:'+response.error.message+' '+timestamp+'</li>');
+            stopInterval();
+          } 
+        });
+    }
 
     /**
      * Thread that gets executed at every timeout, once the facebook user has been authenticated
@@ -175,6 +188,9 @@
                     $("#fbstatuslist").append("<li>Posting:<a href='"+val.photo+"' target='_blank'>"+val.photo+"</a></li>");
                     postStatusToFacebook(val.photo);
                   });   
+            }
+            else{
+                facebookSessionKeepAlive();
             }
           });
         
