@@ -541,6 +541,8 @@ class CellPhotoMail
 
         //set $filestring equal to "small_" version before posting to omlb
         $filestring = "small_".$filestring;
+        
+        
     }
     
   }

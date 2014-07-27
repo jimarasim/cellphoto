@@ -8,7 +8,7 @@
 <script>
     
     var intervalFunction; //set at runtime, so can be cleared
-    var timeout = 10000;
+    var timeout = 5000;
     
     
     window.fbAsyncInit = function() {
@@ -18,8 +18,6 @@
           version    : 'v2.0',
           status     : true
         });
-        
-        $('#fbstatuslist').append("<li>fb initialized</li>");
         
         checkAuthenticationStatus();
     };
@@ -51,19 +49,42 @@
           var uid = response.authResponse.userID;
           var accessToken = response.authResponse.accessToken;
 
-          //print info of user authenticated
-          $('#fbstatuslist').append("<li>UID:"+uid+"</li>");
-          $('#fbstatuslist').append("<li>TOKEN:"+accessToken+"</li>");
           
-          FB.api('/me', {fields: 'last_name,first_name'}, function(response) {
+          
+          
+            FB.api('/me', {fields: 'last_name,first_name'}, function(response) {
+                
                 var timestamp = new Date();
                 $('#fbstatuslist').append("<li>"+response.first_name+" "+response.last_name+" "+timestamp+"</li>");
-                
-                //kick off the interval
-                intervalFunction = setInterval(function(){intervalThread()},timeout);
-                                    
 
-          });
+                //don't do anything else, unless sk8creteordie logged in
+                if(uid==="312446235582285")
+                {
+                  //kick off the interval
+                  intervalFunction = setInterval(function(){intervalThread();},timeout);
+                  
+                  //show the stop timer button
+                  $('#stoptimerbutton').css('display','block');
+                  
+                  //print info of user authenticated
+                $('#fbstatuslist').append("<li>UID:"+uid+"</li>");
+                $('#fbstatuslist').append("<li>TOKEN:"+accessToken+"</li>");
+                  
+                  $('#fbstatuslist').append("<li>fb initialized <a href='https://webmail.seattlerules.com/src/login.php' target='_blank'>cellphoto@seattlerules.com mailbox</a> <a href='cellphotoview.php' target='_blank'>cellphotoview</a></li>");
+        
+        
+                }
+                else
+                {
+                    $('#fbstatuslist').append("<li>Text Images to: cellphoto@seattlerules.com</li>");
+                    $('#fbstatuslist').append("<li><a href='https://www.facebook.com/sk8creteordie' target='_blank'>SkateCrete OrDie</a></li>");
+                    
+                    $('#fbstatuslist').append("<li><a href='cellphotoview.php' target='_blank'>cellphotoview</a></li>");
+                }
+
+
+            });
+          
 
         } else if (response.status === 'not_authorized') {
           // the user is logged in to Facebook, 
@@ -82,7 +103,7 @@
     /**
      * This method will prompt the user to log into facebook, and get the 
      * required permissions from them
-     * @param {type} statusMessage
+     * 
      * @returns {undefined}     */
     function loginToFacebook()
     {
@@ -104,7 +125,7 @@
      * @returns {undefined}     */
     function postStatusToFacebook(statusMessage){
         var timestamp = new Date();
-        statusMessage += '('+timestamp+')';
+//        statusMessage += '('+timestamp+')';
         FB.api('/me/feed', 'post', { message: statusMessage }, function(response) {
           if (!response || response.error) {
             $('#fbstatuslist').append('<li>postStatusToFacebook Error occured:'+response.error.message+' '+timestamp+'</li>');
@@ -145,9 +166,16 @@
     {
         //postStatusToFacebookOmlb('sk8creteordie http://seattlerules.com/cellphoto/cellphoto/JAEMZBOT201404191310031.jpg');
         var timestamp = new Date();
-        $('#fbstatuslist').append("<li>timer interval"+timestamp+"<input type='button' onclick='stopInterval()' value='Stop timer'  /></li>");
+        $('#intervalstatus').text("Last Update:"+timestamp);
         $.get( "cellphoto.php?jsonImageLinks", function( data ) {
-            $('#fbstatuslist').append('<li>Cellphotos:'+data+'</li>');
+            var imageJson = jQuery.parseJSON(data);
+            if(imageJson!==null)
+            {
+                $.each( imageJson, function( key, val ) {
+                    $("#fbstatuslist").append("<li>Posting:<a href='"+val.photo+"' target='_blank'>"+val.photo+"</a></li>");
+                    postStatusToFacebook(val.photo);
+                  });   
+            }
           });
         
     }
@@ -162,6 +190,10 @@
         window.clearTimeout(intervalFunction);
     }
 </script>
+
+<input id='stoptimerbutton' type='button' onclick='stopInterval()' value='Stop timer' style='display:none;' />
+
+<span id="intervalstatus"></span>
 <ul id="fbstatuslist">
 </ul>
 </body>
