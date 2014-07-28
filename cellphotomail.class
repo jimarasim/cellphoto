@@ -21,6 +21,10 @@ class CellPhotoMail
   //array to save paths of images saved
   private $imagePaths;
   
+  //contains the host of the provider sending the message, so things can be handled appropriately
+  //for example, virgin sends additional, unwanted images
+  private $mobileHostProvider;
+  
   function __construct($server,$uid,$pwd)
   { 
     //email server settings
@@ -265,6 +269,7 @@ class CellPhotoMail
             foreach($headerInfo->from as $f)
             {
                 if($this->verboseOn)echo("<b>From:</b>(mailbox)@(host)".$f->mailbox."@".$f->host."<br />");
+                $this->mobileHostProvider = $f->host;
             }      
 
             //sender
@@ -331,19 +336,33 @@ class CellPhotoMail
                         }
                     } while(file_exists($this->filesubdir."/".$filestring));
 
-
-                    //open file for writing
-                    $filewrite = fopen($this->filesubdir."/".$filestring,"w+b");
-                    if($filewrite == FALSE)
-                    {
-                        throw new Exception("COULDNT OPEN FILE:".$filestring." FOR WRITING"."<br />");
-                    }
+                    //special handling for virgin mobile
+//                    if($this->mobileHostProvider==="tmomail.net")
+//                    {
+//                        echo("MOBILEHOSTPROVIDER: tmomail.net");
+//                    }
+                    
 
                     //fetch the body part
                     $bodystring = imap_fetchbody($imapStream,$messageValue,$partid);
 
                     //decode the text
                     $bodystring64 = imap_base64($bodystring);
+                    
+                    //filter out really small images
+                    echo("SMALL IMAGE SIZE FOUND:".strlen($bodystring64)." IGNORING LESS THAN 10000<br />");
+                    if(strlen($bodystring64)<10000)
+                    {
+                        continue;
+                    }
+                    
+                    
+                    //open file for writing
+                    $filewrite = fopen($this->filesubdir."/".$filestring,"w+b");
+                    if($filewrite == FALSE)
+                    {
+                        throw new Exception("COULDNT OPEN FILE:".$filestring." FOR WRITING"."<br />");
+                    }
 
                     //write the contents
                     if(fwrite($filewrite,$bodystring64,strlen($bodystring64)))

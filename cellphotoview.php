@@ -245,7 +245,7 @@ foreach($files as $increment => $name)
 	
 				// Load
 				//increase memory size in case this is a 1.0+ jpg
-                ini_set('memory_limit','100M');
+//                ini_set('memory_limit','100M');
 				$thumb = imagecreatetruecolor($newwidth, $newheight);
 				if(strpos($name,".jpg"))
 				{
