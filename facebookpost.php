@@ -8,7 +8,7 @@
 <script>
     
     var intervalFunction; //set at runtime, so can be cleared
-    var timeout = 30000;
+    var timeout = 5000;
     
     window.fbAsyncInit = function() {
         FB.init({
