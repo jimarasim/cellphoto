@@ -18,12 +18,12 @@ class CellPhotoMail
   //cell photo file name prefix
   private $fileprefix="sk8crete";
   
+  //minimum size of image to process
+  private $minimumImageSize = 10000;
+  
   //array to save paths of images saved
   private $imagePaths;
   
-  //contains the host of the provider sending the message, so things can be handled appropriately
-  //for example, virgin sends additional, unwanted images
-  private $mobileHostProvider;
   
   function __construct($server,$uid,$pwd)
   { 
@@ -336,13 +336,6 @@ class CellPhotoMail
                         }
                     } while(file_exists($this->filesubdir."/".$filestring));
 
-                    //special handling for virgin mobile
-//                    if($this->mobileHostProvider==="tmomail.net")
-//                    {
-//                        echo("MOBILEHOSTPROVIDER: tmomail.net");
-//                    }
-                    
-
                     //fetch the body part
                     $bodystring = imap_fetchbody($imapStream,$messageValue,$partid);
 
@@ -350,9 +343,9 @@ class CellPhotoMail
                     $bodystring64 = imap_base64($bodystring);
                     
                     //filter out really small images
-                    echo("SMALL IMAGE SIZE FOUND:".strlen($bodystring64)." IGNORING LESS THAN 10000<br />");
-                    if(strlen($bodystring64)<10000)
+                    if(strlen($bodystring64)<$this->minimumImageSize)
                     {
+                        if($this->verboseOn)echo("SMALL IMAGE SIZE FOUND:".strlen($bodystring64)." IGNORING LESS THAN:".$this->minimumImageSize."<br />");
                         continue;
                     }
                     

@@ -30,8 +30,10 @@
         echo("<html><head><title>cellphoto</title><script src='https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js'></script></head><body>");
         
         echo("<H1><A href='cellphotoview.php'>View Cell Photos</a></h1>");
+        
+        echo("<h1><a href='https://webmail.seattlerules.com/src/login.php' target='_blank'>cellphoto@seattlerules.com mailbox</a></h1>");
 
-	echo('CELLPHOTO<BR />');
+	echo("<h1><a href='cellphoto.php?jsonImageLinks' target='_blank'>json only</a></h1>");
         
         //get a cell photo mail object
 	$myCellPhotoMail = new CellPhotoMail(null,null,null);

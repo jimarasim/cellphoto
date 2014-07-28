@@ -8,8 +8,7 @@
 <script>
     
     var intervalFunction; //set at runtime, so can be cleared
-    var timeout = 5000;
-    
+    var timeout = 30000;
     
     window.fbAsyncInit = function() {
         FB.init({
@@ -67,11 +66,9 @@
                   $('#stoptimerbutton').css('display','block');
                   
                   //print info of user authenticated
-                $('#fbstatuslist').append("<li>UID:"+uid+"</li>");
-                $('#fbstatuslist').append("<li>TOKEN:"+accessToken+"</li>");
-                  
-                  $('#fbstatuslist').append("<li>fb initialized <a href='https://webmail.seattlerules.com/src/login.php' target='_blank'>cellphoto@seattlerules.com mailbox</a> <a href='cellphotoview.php' target='_blank'>cellphotoview</a></li>");
-        
+                    $('#fbstatuslist').append("<li>UID:"+uid+"</li>");
+                    $('#fbstatuslist').append("<li>TOKEN:"+accessToken+"</li>");
+
         
                 }
                 else
@@ -180,7 +177,6 @@
      * @returns {undefined}     */
     function facebookSessionKeepAlive(){
         var timestamp = new Date();
-        statusMessage += '('+timestamp+')';
         FB.api('/me', {fields: 'last_name,first_name'}, function(response) {
           if (!response || response.error) {
             $('#fbstatuslist').append('<li>facebookSessionKeepAlive Error occured:'+response.error.message+' '+timestamp+'</li>');
@@ -196,9 +192,13 @@
     {
         //postStatusToFacebookOmlb('sk8creteordie http://seattlerules.com/cellphoto/cellphoto/JAEMZBOT201404191310031.jpg');
         var timestamp = new Date();
-        $('#intervalstatus').text("Last Update:"+timestamp);
+        
         $.get( "cellphoto.php?jsonImageLinks", function( data ) {
             var imageJson = jQuery.parseJSON(data);
+            
+            $('#lastupdatetime').text(timestamp);
+            $('#lastresponse').text(imageJson);
+            
             if(imageJson!==null)
             {
                 $.each( imageJson, function( key, val ) {
@@ -237,9 +237,20 @@
     }
 </script>
 
+
+    
+<h1><a href='https://webmail.seattlerules.com/src/login.php' target='_blank'>cellphoto@seattlerules.com mailbox</a></h1>
+<h1><a href='cellphotoview.php' target='_blank'>cellphotoview</a></h1>
+
+Last Update Time:<br />
+<span id="lastupdatetime"></span><br />
+<br />
+Last Response:<br />
+<span id="lastresponse"></span><br />
+
 <input id='stoptimerbutton' type='button' onclick='stopInterval()' value='Stop timer' style='display:none;' />
 
-<span id="intervalstatus"></span>
+
 <ul id="fbstatuslist">
 </ul>
 </body>
