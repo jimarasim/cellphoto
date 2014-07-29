@@ -57,7 +57,8 @@
                 //don't do anything else, unless sk8creteordie logged in
                 if(uid==="312446235582285")
                 {
-                  //kick off the interval
+                  
+                  //schedule the intervals for checking for images, then posting them to facebook
                   intervalFunction = setInterval(function(){intervalThread();},timeout);
                   
                   //show the stop timer button
@@ -115,100 +116,13 @@
     }
     
     /**
-     * This method will upload a photo on the users behalf
-     * @param {type} imageUrl
-     * @returns {undefined}     */
-    function uploadPhotoToFacebook(imageUrl){
-        var timestamp = new Date();
-        
-        
-        FB.api('/me/photos', 'post', { url: imageUrl, name: imageUrl }, function(response) {
-          if (!response || response.error) {
-            $('#fbstatuslist').append('<li>uploadPhotoToFacebook Error occured:'+response.error.message+' '+timestamp+'</li>');
-            stopInterval();
-          } else {
-            $('#fbstatuslist').append('<li>uploadPhotoToFacebook ID: ' + response.id + ' '+timestamp+'</li>');
-          }
-        });
-    }
-    
-    /**
-     * This method will upload a photo on the users behalf to a group
-     * @param {type} imageUrl
-     * @returns {undefined}     */
-    function uploadPhotoToFacebookOmlb(imageUrl){
-        var timestamp = new Date();
-        
-        FB.api('/191968037495092/feed', 'post', { message: imageUrl, link:imageUrl }, function(response) {
-          if (!response || response.error) {
-            $('#fbstatuslist').append('<li>uploadPhotoToFacebookOmlb Error occured:'+response.error.message+' '+timestamp+'</li>');
-            stopInterval();
-          } else {
-            $('#fbstatuslist').append('<li>uploadPhotoToFacebookOmlb ID: ' + response.id + ' '+timestamp+'</li>');
-          }
-        });
-    }
-    
-    /**
-     * This method will post a status on the users behalf, with a timestamp
-     * @param {type} statusMessage
-     * @returns {undefined}     */
-    function postStatusToFacebook(statusMessage){
-        var timestamp = new Date();
-        
-        FB.api('/me/feed', 'post', { message: statusMessage }, function(response) {
-          if (!response || response.error) {
-            $('#fbstatuslist').append('<li>postStatusToFacebook Error occured:'+response.error.message+' '+timestamp+'</li>');
-            stopInterval();
-          } else {
-            $('#fbstatuslist').append('<li>postStatusToFacebook ID: ' + response.id + ' '+timestamp+'</li>');
-          }
-        });
-    }
-    
-    /** This method will post a status on the users behalf to the ombl group
-     * @param {type} statusMessage
-     * @returns {undefined}     */
-    function postStatusToFacebookOmlb(statusMessage){
-        //omlb group id: 191968037495092
-        //get this by:
-        //1. go to graph api explorer: https://developers.facebook.com/tools/explorer
-        //2. get access token, and check user_groups
-        //3. plug in the node: me/groups
-        var timestamp = new Date();
-        FB.api('/191968037495092/feed', 'post', { message: statusMessage }, function(response) {
-          if (!response || response.error) {
-            $('#fbstatuslist').append('<li>postStatusToFacebookOmlb Error occured:'+response.error.message+' '+timestamp+'</li>');
-            stopInterval();
-          } else {
-            $('#fbstatuslist').append('<li>postStatusToFacebookOmlb ID: ' + response.id + ' '+timestamp+'</li>');
-          }
-        });
-    }
-    
-    
-    /**
-     * This method merely serves to keep the facebook session alive, so it does not timeout
-     * @returns {undefined}     */
-    function facebookSessionKeepAlive(){
-        var timestamp = new Date();
-        FB.api('/me', {fields: 'last_name,first_name'}, function(response) {
-          if (!response || response.error) {
-            $('#fbstatuslist').append('<li>facebookSessionKeepAlive Error occured:'+response.error.message+' '+timestamp+'</li>');
-            stopInterval();
-          } 
-        });
-    }
-
-    /**
      * Thread that gets executed at every timeout, once the facebook user has been authenticated
      * @returns {undefined}     */
     function intervalThread()
     {
-        //postStatusToFacebookOmlb('sk8creteordie http://seattlerules.com/cellphoto/cellphoto/JAEMZBOT201404191310031.jpg');
         var timestamp = new Date();
         
-        $.get( "cellphoto.php?jsonImageLinks", function( data ) {
+        $.get( "cellphoto.php?jsonImageLinks=1", function(data) {
             var imageJson = jQuery.parseJSON(data);
             
             $('#lastupdatetime').text(timestamp);
@@ -239,9 +153,162 @@
             else{
                 facebookSessionKeepAlive();
             }
-          });
+          
+//            alert( "success" );
+          })
+            .done(function() {
+//              alert( "second success" );
+            })
+            .fail(function() {
+                $('#fbstatuslist').append('<li>ERROR: json ajax fetch for photos failed</li>');
+                recoverFromError();
+//              alert( "error" );
+            })
+            .always(function() {
+//              alert( "finished" );
+                
+            });
+//        $.get( "cellphoto.php?jsonImageLinks", function( data ) {
+//            var imageJson = jQuery.parseJSON(data);
+//            
+//            $('#lastupdatetime').text(timestamp);
+//            $('#lastresponse').text(imageJson);
+//            
+//            if(imageJson!==null)
+//            {
+//                $.each( imageJson, function( key, val ) {
+//                    var photoString = val.photo;
+//                    $("#fbstatuslist").append("<li>Posting:<a href='"+photoString+"' target='_blank'>"+photoString+"</a></li>");
+//                    
+//                    if((photoString.indexOf(".jpg")>-1)||
+//                            (photoString.indexOf(".png")>-1)||
+//                            (photoString.indexOf(".gif")>-1))
+//                    {
+//                        uploadPhotoToFacebook(photoString);
+//                        uploadPhotoToFacebookOmlb(photoString);
+//                    }
+//                    else
+//                    {
+//                        postStatusToFacebook(photoString);
+//                        postStatusToOmlb(photoString);
+//                    }
+//                    
+//                    
+//                  });   
+//            }
+//            else{
+//                facebookSessionKeepAlive();
+//            }
+//          });
         
     }
+    
+    /**
+     * This method will upload a photo on the users behalf
+     * @param {type} imageUrl
+     * @returns {undefined}     */
+    function uploadPhotoToFacebook(imageUrl){
+        var timestamp = new Date();
+        
+        
+        FB.api('/me/photos', 'post', { url: imageUrl, name: imageUrl }, function(response) {
+          if (!response || response.error) {
+            $('#fbstatuslist').append('<li>uploadPhotoToFacebook Error occured:'+response.error.message+' '+timestamp+'</li>');
+            recoverFromError();
+          } else {
+            $('#fbstatuslist').append('<li>uploadPhotoToFacebook ID: ' + response.id + ' '+timestamp+'</li>');
+          }
+        });
+    }
+    
+    /**
+     * This method will upload a photo on the users behalf to a group
+     * @param {type} imageUrl
+     * @returns {undefined}     */
+    function uploadPhotoToFacebookOmlb(imageUrl){
+        var timestamp = new Date();
+        
+        FB.api('/191968037495092/feed', 'post', { message: imageUrl, link:imageUrl }, function(response) {
+          if (!response || response.error) {
+            $('#fbstatuslist').append('<li>uploadPhotoToFacebookOmlb Error occured:'+response.error.message+' '+timestamp+'</li>');
+            recoverFromError();
+          } else {
+            $('#fbstatuslist').append('<li>uploadPhotoToFacebookOmlb ID: ' + response.id + ' '+timestamp+'</li>');
+          }
+        });
+    }
+    
+    /**
+     * This method will post a status on the users behalf, with a timestamp
+     * @param {type} statusMessage
+     * @returns {undefined}     */
+    function postStatusToFacebook(statusMessage){
+        var timestamp = new Date();
+        
+        FB.api('/me/feed', 'post', { message: statusMessage }, function(response) {
+          if (!response || response.error) {
+            $('#fbstatuslist').append('<li>postStatusToFacebook Error occured:'+response.error.message+' '+timestamp+'</li>');
+            recoverFromError();
+          } else {
+            $('#fbstatuslist').append('<li>postStatusToFacebook ID: ' + response.id + ' '+timestamp+'</li>');
+          }
+        });
+    }
+    
+    /** This method will post a status on the users behalf to the ombl group
+     * @param {type} statusMessage
+     * @returns {undefined}     */
+    function postStatusToFacebookOmlb(statusMessage){
+        //omlb group id: 191968037495092
+        //get this by:
+        //1. go to graph api explorer: https://developers.facebook.com/tools/explorer
+        //2. get access token, and check user_groups
+        //3. plug in the node: me/groups
+        var timestamp = new Date();
+        FB.api('/191968037495092/feed', 'post', { message: statusMessage }, function(response) {
+          if (!response || response.error) {
+            $('#fbstatuslist').append('<li>postStatusToFacebookOmlb Error occured:'+response.error.message+' '+timestamp+'</li>');
+            recoverFromError();
+          } else {
+            $('#fbstatuslist').append('<li>postStatusToFacebookOmlb ID: ' + response.id + ' '+timestamp+'</li>');
+          }
+        });
+    }
+    
+    
+    /**
+     * This method merely serves to keep the facebook session alive, so it does not timeout
+     * @returns {undefined}     */
+    function facebookSessionKeepAlive(){
+        var timestamp = new Date();
+        FB.api('/me', {fields: 'last_name'}, function(response) {
+          if (!response || response.error) {
+            $('#fbstatuslist').append('<li>facebookSessionKeepAlive Error occured:'+response.error.message+' '+timestamp+'</li>');
+            recoverFromError();
+          } 
+        });
+    }
+
+    
+    
+    /** 
+     * This function attempts to recover from an error
+     * @returns {undefined}
+     */
+    function recoverFromError()
+    {
+        //kill the current timer
+        stopInterval();
+        
+        //TODO SAVE ERROR INFORMAITON SOMEWHERE
+        
+        var timestamp = new Date();
+        $('#fbstatuslist').append('<li>Re-loading page to attempt recovery '+timestamp+'</li>');
+        
+        //reload the page
+        location.reload();
+    }
+    
     
     /**
      * This function will kill the timer if any error occurs
