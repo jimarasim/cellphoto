@@ -33,6 +33,8 @@ class CellPhotoMail
     $this->uid = is_null($uid)?"cellphoto@seattlerules.com":$uid;
     $this->pwd = is_null($pwd)?"J@emzRulz":$pwd;  
       
+    //hotmail
+    ////$myCellPhotoMail = new CellPhotoMail("{pop3.live.com:995/pop3/ssl}INBOX","jaemzware@hotmail.com","Doggy@Lady1",null,null);
     //gmail
 //    $this->server = is_null($server)?"{imap.gmail.com:993/imap/ssl}INBOX":$server; 
 //    $this->uid = is_null($uid)?"jaemzware@gmail.com":$uid;
