@@ -121,12 +121,30 @@
     function uploadPhotoToFacebook(imageUrl){
         var timestamp = new Date();
         
+        
         FB.api('/me/photos', 'post', { url: imageUrl, name: imageUrl }, function(response) {
           if (!response || response.error) {
             $('#fbstatuslist').append('<li>uploadPhotoToFacebook Error occured:'+response.error.message+' '+timestamp+'</li>');
             stopInterval();
           } else {
             $('#fbstatuslist').append('<li>uploadPhotoToFacebook ID: ' + response.id + ' '+timestamp+'</li>');
+          }
+        });
+    }
+    
+    /**
+     * This method will upload a photo on the users behalf to a group
+     * @param {type} imageUrl
+     * @returns {undefined}     */
+    function uploadPhotoToFacebookOmlb(imageUrl){
+        var timestamp = new Date();
+        
+        FB.api('/191968037495092/feed', 'post', { message: imageUrl, link:imageUrl }, function(response) {
+          if (!response || response.error) {
+            $('#fbstatuslist').append('<li>uploadPhotoToFacebookOmlb Error occured:'+response.error.message+' '+timestamp+'</li>');
+            stopInterval();
+          } else {
+            $('#fbstatuslist').append('<li>uploadPhotoToFacebookOmlb ID: ' + response.id + ' '+timestamp+'</li>');
           }
         });
     }
@@ -158,7 +176,6 @@
         //2. get access token, and check user_groups
         //3. plug in the node: me/groups
         var timestamp = new Date();
-        statusMessage += '('+timestamp+')';
         FB.api('/191968037495092/feed', 'post', { message: statusMessage }, function(response) {
           if (!response || response.error) {
             $('#fbstatuslist').append('<li>postStatusToFacebookOmlb Error occured:'+response.error.message+' '+timestamp+'</li>');
@@ -208,10 +225,12 @@
                             (photoString.indexOf(".gif")>-1))
                     {
                         uploadPhotoToFacebook(photoString);
+                        uploadPhotoToFacebookOmlb(photoString);
                     }
                     else
                     {
                         postStatusToFacebook(photoString);
+                        postStatusToOmlb(photoString);
                     }
                     
                     
