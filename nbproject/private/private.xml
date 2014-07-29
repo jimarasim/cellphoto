@@ -5,7 +5,7 @@
             <url>cellphotomail.class</url>
             <bookmark id="2">
                 <name/>
-                <line>430</line>
+                <line>432</line>
                 <key/>
             </bookmark>
         </file>
@@ -14,8 +14,9 @@
         <group>
             <file>file:/Users/jameskarasim/Documents/STATIC/jaemzware/php/cellphoto/cellphotoview.php</file>
             <file>file:/Users/jameskarasim/Documents/STATIC/jaemzware/php/cellphoto/facebookpost.php</file>
+            <file>file:/Users/jameskarasim/Documents/STATIC/jaemzware/php/cellphoto/facebookclient.js</file>
             <file>file:/Users/jameskarasim/Documents/STATIC/jaemzware/php/cellphoto/cellphoto.php</file>
-            <file>file:/Users/jameskarasim/Documents/STATIC/jaemzware/php/cellphoto/cellphotopost.php</file>
+            <file>file:/Users/jameskarasim/Documents/STATIC/jaemzware/php/cellphoto/cellphotopost.old.php</file>
             <file>file:/Users/jameskarasim/Documents/STATIC/jaemzware/php/cellphoto/cellphotomail.class</file>
         </group>
     </open-files>
