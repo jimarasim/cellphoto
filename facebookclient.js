@@ -52,7 +52,7 @@
             FB.api('/me', {fields: 'last_name,first_name'}, function(response) {
                 
                 var timestamp = new Date();
-                $('#fbstatuslist').append("<li>"+response.first_name+" "+response.last_name+" "+timestamp+"</li>");
+                $('#USER').text(response.first_name+" "+response.last_name+" "+timestamp);
 
                 //don't do anything else, unless sk8creteordie logged in
                 if(uid==="312446235582285")
@@ -65,8 +65,8 @@
                   $('#stoptimerbutton').css('display','block');
                   
                   //print info of user authenticated
-                    $('#fbstatuslist').append("<li>UID:"+uid+"</li>");
-                    $('#fbstatuslist').append("<li>TOKEN:"+accessToken+"</li>");
+                    $('#UID').text(uid);
+                    $('#ACCESSTOKEN').text(accessToken);
 
         
                 }
@@ -112,7 +112,7 @@
             } else {
                 $('#fbstatuslist').append("<li>USER CANCELLED LOGIN OR DID NOT AUTHORIZE</li>");
             }
-          }, {scope: 'publish_actions, user_groups'});
+          }, {scope: 'publish_actions, user_groups, user_photos'});
     }
     
     /**
@@ -138,13 +138,18 @@
                             (photoString.indexOf(".png")>-1)||
                             (photoString.indexOf(".gif")>-1))
                     {
+//                        uploadPhotoToCoverPhotosAlbum(photoString);
+
                         uploadPhotoToFacebook(photoString);
-                        uploadPhotoToFacebookOmlb(photoString);
+                        
+                        //other people couldn't see these for some reason, only my jim arasim account (had to set app posts to public)
+//                        uploadPhotoToFacebookOmlb(photoString);
+                        postStatusToFacebookOmlb(photoString);
                     }
                     else
                     {
                         postStatusToFacebook(photoString);
-                        postStatusToOmlb(photoString);
+                        postStatusToFacebookOmlb(photoString);
                     }
                     
                     
@@ -154,55 +159,44 @@
                 facebookSessionKeepAlive();
             }
           
-//            alert( "success" );
           })
             .done(function() {
-//              alert( "second success" );
             })
             .fail(function() {
                 $('#fbstatuslist').append('<li>ERROR: json ajax fetch for photos failed</li>');
                 recoverFromError();
-//              alert( "error" );
             })
             .always(function() {
-//              alert( "finished" );
                 
             });
-//        $.get( "cellphoto.php?jsonImageLinks", function( data ) {
-//            var imageJson = jQuery.parseJSON(data);
-//            
-//            $('#lastupdatetime').text(timestamp);
-//            $('#lastresponse').text(imageJson);
-//            
-//            if(imageJson!==null)
-//            {
-//                $.each( imageJson, function( key, val ) {
-//                    var photoString = val.photo;
-//                    $("#fbstatuslist").append("<li>Posting:<a href='"+photoString+"' target='_blank'>"+photoString+"</a></li>");
-//                    
-//                    if((photoString.indexOf(".jpg")>-1)||
-//                            (photoString.indexOf(".png")>-1)||
-//                            (photoString.indexOf(".gif")>-1))
-//                    {
-//                        uploadPhotoToFacebook(photoString);
-//                        uploadPhotoToFacebookOmlb(photoString);
-//                    }
-//                    else
-//                    {
-//                        postStatusToFacebook(photoString);
-//                        postStatusToOmlb(photoString);
-//                    }
-//                    
-//                    
-//                  });   
-//            }
-//            else{
-//                facebookSessionKeepAlive();
-//            }
-//          });
         
     }
     
+    //THIS ALBUM DOESN'T WORK, DOESN'T HAVE can_upload
+    //THIS ALBUM DOESN'T WORK, DOESN'T HAVE can_upload
+    //THIS ALBUM DOESN'T WORK, DOESN'T HAVE can_upload
+    /**
+     * This method will upload a photo to sk8creteordies cover photos album
+     * @param {type} imageUrl
+     * @returns {undefined}     */
+    function uploadPhotoToCoverPhotosAlbum(imageUrl){
+        var timestamp = new Date();
+        
+        
+        
+        FB.api('/313673912126184/photos', 'post', { url: imageUrl, message: imageUrl }, function(response) { //THIS ALBUM DOESN'T WORK, DOESN'T HAVE can_upload
+          if (!response || response.error) {
+            $('#fbstatuslist').append('<li>uploadPhotoToCoverPhotosAlbum Error occured:'+response.error.message+' '+timestamp+'</li>');
+//            recoverFromError();
+          } else {
+            $('#fbstatuslist').append('<li>uploadPhotoToCoverPhotosAlbum ID: ' + response.id + ' '+timestamp+'</li>');
+          }
+        });
+    }
+    
+    
+    
+    //other people couldn't see these for some reason, only my jim arasim account
     /**
      * This method will upload a photo on the users behalf
      * @param {type} imageUrl
@@ -210,17 +204,17 @@
     function uploadPhotoToFacebook(imageUrl){
         var timestamp = new Date();
         
-        
-        FB.api('/me/photos', 'post', { url: imageUrl, name: imageUrl }, function(response) {
+        FB.api('/me/photos', 'post', { url: imageUrl, name: imageUrl  }, function(response) {
           if (!response || response.error) {
             $('#fbstatuslist').append('<li>uploadPhotoToFacebook Error occured:'+response.error.message+' '+timestamp+'</li>');
-            recoverFromError();
+//            recoverFromError();
           } else {
             $('#fbstatuslist').append('<li>uploadPhotoToFacebook ID: ' + response.id + ' '+timestamp+'</li>');
           }
         });
     }
     
+    //other people couldn't see these for some reason, only my jim arasim account
     /**
      * This method will upload a photo on the users behalf to a group
      * @param {type} imageUrl
@@ -231,7 +225,7 @@
         FB.api('/191968037495092/feed', 'post', { message: imageUrl, link:imageUrl }, function(response) {
           if (!response || response.error) {
             $('#fbstatuslist').append('<li>uploadPhotoToFacebookOmlb Error occured:'+response.error.message+' '+timestamp+'</li>');
-            recoverFromError();
+//            recoverFromError();
           } else {
             $('#fbstatuslist').append('<li>uploadPhotoToFacebookOmlb ID: ' + response.id + ' '+timestamp+'</li>');
           }
@@ -248,7 +242,7 @@
         FB.api('/me/feed', 'post', { message: statusMessage }, function(response) {
           if (!response || response.error) {
             $('#fbstatuslist').append('<li>postStatusToFacebook Error occured:'+response.error.message+' '+timestamp+'</li>');
-            recoverFromError();
+//            recoverFromError();
           } else {
             $('#fbstatuslist').append('<li>postStatusToFacebook ID: ' + response.id + ' '+timestamp+'</li>');
           }
@@ -268,7 +262,7 @@
         FB.api('/191968037495092/feed', 'post', { message: statusMessage }, function(response) {
           if (!response || response.error) {
             $('#fbstatuslist').append('<li>postStatusToFacebookOmlb Error occured:'+response.error.message+' '+timestamp+'</li>');
-            recoverFromError();
+//            recoverFromError();
           } else {
             $('#fbstatuslist').append('<li>postStatusToFacebookOmlb ID: ' + response.id + ' '+timestamp+'</li>');
           }
@@ -282,10 +276,15 @@
     function facebookSessionKeepAlive(){
         var timestamp = new Date();
         FB.api('/me', {fields: 'last_name'}, function(response) {
+//        FB.api('/me/albums', {fields: 'id,name,can_upload'}, function(response) { //DEBUG
           if (!response || response.error) {
             $('#fbstatuslist').append('<li>facebookSessionKeepAlive Error occured:'+response.error.message+' '+timestamp+'</li>');
             recoverFromError();
           } 
+          else
+          {
+//              $('#fbstatuslist').append(JSON.stringify(response)); //DEBUG
+          }
         });
     }
 
