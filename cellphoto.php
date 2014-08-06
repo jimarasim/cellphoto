@@ -2,9 +2,26 @@
     include 'cellphotomail.class'; 
     
     $jsonImageLinks=filter_input(INPUT_GET,('jsonImageLinks'));
+    $faceBookAppId=filter_input(INPUT_GET,('fbai'));
     
     if(isset($jsonImageLinks)){
         getJsonImageLinks();
+    }
+    //return the facebook app id for sk8creteorbot
+    elseif(isset($faceBookAppId)){
+        
+        $requestOrigin = filter_input(INPUT_SERVER, 'HTTP_REFERER');
+        
+        //check if this request is coming from an expected origin
+        if(strpos($requestOrigin,"localhost/~jameskarasim/cellphoto/facebookpost.php")!==FALSE
+                ||
+           strpos($requestOrigin,"http://seattlerules.com/cellphoto/facebookpost.php")!==FALSE
+                )
+        {
+           
+            echo('709181395771740');
+        }
+        
     }
     else{
         processPhotosOnly();

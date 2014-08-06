@@ -8,25 +8,37 @@
     var intervalFunction; //set at runtime, so can be cleared
     var timeout = 5000;
     
-    window.fbAsyncInit = function() {
-        FB.init({
-          appId      : '709181395771740',
-          xfbml      : false,
-          version    : 'v2.0',
-          status     : true
-        });
+    $.get( "cellphoto.php?fbai=1", function(data) {
         
-        checkAuthenticationStatus();
-    };
+        if(data){
+            
+            window.fbAsyncInit = function() {
+                FB.init({
+                  appId      : data,
+                  xfbml      : false,
+                  version    : 'v2.0',
+                  status     : true
+                });
 
-    //LOADS THE SDK
-    (function(d, s, id){
-     var js, fjs = d.getElementsByTagName(s)[0];
-     if (d.getElementById(id)) {return;}
-     js = d.createElement(s); js.id = id;
-     js.src = "//connect.facebook.net/en_US/sdk.js";
-     fjs.parentNode.insertBefore(js, fjs);
-    }(document, 'script', 'facebook-jssdk'));
+                checkAuthenticationStatus();
+            };
+
+            //LOADS THE SDK
+            (function(d, s, id){
+             var js, fjs = d.getElementsByTagName(s)[0];
+             if (d.getElementById(id)) {return;}
+             js = d.createElement(s); js.id = id;
+             js.src = "//connect.facebook.net/en_US/sdk.js";
+             fjs.parentNode.insertBefore(js, fjs);
+            }(document, 'script', 'facebook-jssdk'));
+        }
+        else
+        {
+            document.write("access forbidden, sorry");
+        }
+    });
+
+
     
     /**
      * This method makes sure a user is authenticated, then does something if they are
@@ -34,7 +46,7 @@
      */
     function checkAuthenticationStatus()
     {
-//        $('#analogplaylist').empty();
+
         //CHECK if we're logged in 
         FB.getLoginStatus(function(response) {
         if (response.status === 'connected') {
@@ -49,10 +61,13 @@
           
           
           
-            FB.api('/me', {fields: 'last_name,first_name'}, function(response) {
+            FB.api('/me', {fields: 'last_name,first_name' }, function(response) {
                 
                 var timestamp = new Date();
                 $('#USER').text(response.first_name+" "+response.last_name+" "+timestamp);
+
+                //clear the log list
+                $('#fbstatuslist').empty();
 
                 //don't do anything else, unless sk8creteordie logged in
                 if(uid==="312446235582285")
@@ -61,7 +76,11 @@
                   //schedule the intervals for checking for images, then posting them to facebook
                   intervalFunction = setInterval(function(){intervalThread();},timeout);
                   
-                  //show the stop timer button
+                  //link to mailbox
+                  $('#importantLinks').append("<h3><a href='https://webmail.seattlerules.com/src/login.php' target='_blank'>cellphoto@seattlerules.com mailbox</a></h3>");
+                  $('#importantLinks').append("<h3><a href='cellphotoview.php' target='_blank'>cellphotoview</a></h3>");
+                  
+                  //show the stop timer button / hide the login button
                   $('#stoptimerbutton').css('display','block');
                   
                   //print info of user authenticated
@@ -73,10 +92,13 @@
                 else
                 {
                     $('#fbstatuslist').append("<li>Text Images to: cellphoto@seattlerules.com</li>");
-                    $('#fbstatuslist').append("<li><a href='https://www.facebook.com/sk8creteordie' target='_blank'>SkateCrete OrDie</a></li>");
-                    
-                    $('#fbstatuslist').append("<li><a href='cellphotoview.php' target='_blank'>cellphotoview</a></li>");
                 }
+                
+                //hide the login button
+                $('#loginbutton').css('display','none');
+                
+                //links to cellphotoview and facebook profile
+                $('#importantLinks').append("<h3><a href='https://www.facebook.com/sk8creteordie' target='_blank'>SkateCrete OrDie</a></h3>");
 
 
             });
@@ -85,12 +107,14 @@
         } else if (response.status === 'not_authorized') {
           // the user is logged in to Facebook, 
           // but has not authenticated your app
-          $('#fbstatuslist').append("<li>UNAUTHORIZED</li>");
-          $('#fbstatuslist').append("<li><input type='button' onclick='loginToFacebook()' value='Login to Facebook' /></li>");
+          
+          $('#loginbutton').css('display','block');
+          $('#stoptimerbutton').css('display','none');
 
         } else {
-          $('#fbstatuslist').append("<li>NOT LOGGED IN</li>");
-          $('#fbstatuslist').append("<li><input type='button' onclick='loginToFacebook()' value='Login to Facebook'  /></li>");
+          
+          $('#loginbutton').css('display','block');
+          $('#stoptimerbutton').css('display','none');
         
         }
        });
@@ -170,6 +194,21 @@
                 
             });
         
+    }
+    
+    
+    /**
+     * This method will run a custom facebook api call
+     * @returns {undefined}     */
+    function scratch(){
+        FB.api('/313673912126184/photos', 'post', { url: imageUrl, message: imageUrl }, function(response) { //THIS ALBUM DOESN'T WORK, DOESN'T HAVE can_upload
+          if (!response || response.error) {
+            $('#fbstatuslist').append('<li>uploadPhotoToCoverPhotosAlbum Error occured:'+response.error.message+' '+timestamp+'</li>');
+//            recoverFromError();
+          } else {
+            $('#fbstatuslist').append('<li>uploadPhotoToCoverPhotosAlbum ID: ' + response.id + ' '+timestamp+'</li>');
+          }
+        });
     }
     
     //THIS ALBUM DOESN'T WORK, DOESN'T HAVE can_upload

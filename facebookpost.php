@@ -7,15 +7,14 @@
     <link rel="Stylesheet" href="stylebase.css" />
 </head>
 <body>    
-<h3><a href='https://webmail.seattlerules.com/src/login.php' target='_blank'>cellphoto@seattlerules.com mailbox</a></h3>
-<h3><a href='cellphotoview.php' target='_blank'>cellphotoview</a></h3>
-<h3><a href='https://www.facebook.com/sk8creteordie' target='_blank'>SkateCrete OrDie</a></h3>
+<div id="importantLinks"></div>
 <table>
 <tr>
 <td>
 User:
 </td>
 <td>
+<input id='loginbutton' type='button' onclick='loginToFacebook()' value='Login to Facebook' style='display:none;'/>
 <span id="USER"></span>
 </td>
 </tr>
