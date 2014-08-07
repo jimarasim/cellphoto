@@ -1,4 +1,11 @@
-table, th, td
+table
+{
+    border: 1px solid black;
+    text-align: left;
+    vertical-align: top;
+}
+
+th, td
 {
     border: 1px solid black;
     text-align: left;

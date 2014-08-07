@@ -129,7 +129,7 @@
     {
         FB.login(function(response) {
             if (response.authResponse) {
-              $('#fbstatuslist').append('Welcome!  Fetching your information.... ');
+//              $('#fbstatuslist').append('Welcome!  Fetching your information.... ');
               FB.api('/me', function(response) {
                 checkAuthenticationStatus();
               });
@@ -162,13 +162,8 @@
                             (photoString.indexOf(".png")>-1)||
                             (photoString.indexOf(".gif")>-1))
                     {
-//                        uploadPhotoToCoverPhotosAlbum(photoString);
-
                         uploadPhotoToFacebook(photoString);
-                        
-                        //other people couldn't see these for some reason, only my jim arasim account (had to set app posts to public)
-//                        uploadPhotoToFacebookOmlb(photoString);
-                        postStatusToFacebookOmlb(photoString);
+                        uploadPhotoToFacebookOmlb(photoString);
                     }
                     else
                     {

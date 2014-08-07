@@ -1,7 +1,7 @@
 <html>
 
 <head>
-<title>Cell Photo View</title>
+<title>Sk8CreteOrBot - Outside Viewer</title>
 <style type="text/css">
 
 body.visible

@@ -1,7 +1,7 @@
 <html>
 
 <head>
-    <title>cellphotoview</title>
+    <title>Sk8CreteOrBot - Outside Viewer Frame</title>
     <style type="text/css">
 	body
 	{

@@ -1,6 +1,6 @@
 <html>
 <head>
-    <title>cellphoto - facebook</title>
+    <title>Sk8CreteOrBot - Facebook Photo Publisher</title>
     
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
     <script type="text/javascript" src="facebookclient.js"></script>
@@ -59,7 +59,7 @@ Last Response:
 </td>
 </tr>
 </table>
-
+<a href='privacypolicy.html' target='_blank'>Privacy Policy</a>
 
 
 

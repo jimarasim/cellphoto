@@ -123,7 +123,7 @@ class CellPhotoMail
    */
   private function Connect()
   {
-        if($this->verboseOn)echo('CONNECT'.$this->server.'<br />');
+        if($this->verboseOn)echo('CONNECTING TO MAIL SERVER <br />');
 
         //open stream to email inbox
         $imapStream = imap_open($this->server, $this->uid, $this->pwd);
