@@ -13,13 +13,14 @@
         $requestOrigin = filter_input(INPUT_SERVER, 'HTTP_REFERER');
         
         //only return app id if this request is coming from an expected origin
-        if(strpos($requestOrigin,"localhost/~jameskarasim/cellphoto/facebookpost.php")!==FALSE
-                ||
-           strpos($requestOrigin,"seattlerules.com/cellphoto/facebookpost.php")!==FALSE
-                ){
+        //turn off for review
+//        if(strpos($requestOrigin,"localhost/~jameskarasim/cellphoto/facebookpost.php")!==FALSE
+//                ||
+//           strpos($requestOrigin,"seattlerules.com/cellphoto/facebookpost.php")!==FALSE
+//                ){
            
             echo('709181395771740');
-        }
+//        }
         
     }
     else{
