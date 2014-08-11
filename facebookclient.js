@@ -7,6 +7,7 @@
     
     var intervalFunction; //set at runtime, so can be cleared
     var timeout = 5000;
+    var requestedPermissions = 'publish_actions, user_photos';
     
     $.get( "cellphoto.php?fbai=1", function(data) {
         
@@ -136,7 +137,7 @@
             } else {
                 $('#fbstatuslist').append("<li>USER CANCELLED LOGIN OR DID NOT AUTHORIZE</li>");
             }
-          }, {scope: 'publish_actions, user_groups, user_photos'});
+          }, {scope: requestedPermissions});
     }
     
     /**
@@ -160,15 +161,11 @@
                     
                     if((photoString.indexOf(".jpg")>-1)||
                             (photoString.indexOf(".png")>-1)||
-                            (photoString.indexOf(".gif")>-1))
-                    {
+                            (photoString.indexOf(".gif")>-1)){
                         uploadPhotoToFacebook(photoString);
-                        uploadPhotoToFacebookOmlb(photoString);
                     }
-                    else
-                    {
+                    else{
                         postStatusToFacebook(photoString);
-                        postStatusToFacebookOmlb(photoString);
                     }
                     
                     
@@ -191,46 +188,6 @@
         
     }
     
-    
-    /**
-     * This method will run a custom facebook api call
-     * @returns {undefined}     */
-    function scratch(){
-        FB.api('/313673912126184/photos', 'post', { url: imageUrl, message: imageUrl }, function(response) { //THIS ALBUM DOESN'T WORK, DOESN'T HAVE can_upload
-          if (!response || response.error) {
-            $('#fbstatuslist').append('<li>uploadPhotoToCoverPhotosAlbum Error occured:'+response.error.message+' '+timestamp+'</li>');
-//            recoverFromError();
-          } else {
-            $('#fbstatuslist').append('<li>uploadPhotoToCoverPhotosAlbum ID: ' + response.id + ' '+timestamp+'</li>');
-          }
-        });
-    }
-    
-    //THIS ALBUM DOESN'T WORK, DOESN'T HAVE can_upload
-    //THIS ALBUM DOESN'T WORK, DOESN'T HAVE can_upload
-    //THIS ALBUM DOESN'T WORK, DOESN'T HAVE can_upload
-    /**
-     * This method will upload a photo to sk8creteordies cover photos album
-     * @param {type} imageUrl
-     * @returns {undefined}     */
-    function uploadPhotoToCoverPhotosAlbum(imageUrl){
-        var timestamp = new Date();
-        
-        
-        
-        FB.api('/313673912126184/photos', 'post', { url: imageUrl, message: imageUrl }, function(response) { //THIS ALBUM DOESN'T WORK, DOESN'T HAVE can_upload
-          if (!response || response.error) {
-            $('#fbstatuslist').append('<li>uploadPhotoToCoverPhotosAlbum Error occured:'+response.error.message+' '+timestamp+'</li>');
-//            recoverFromError();
-          } else {
-            $('#fbstatuslist').append('<li>uploadPhotoToCoverPhotosAlbum ID: ' + response.id + ' '+timestamp+'</li>');
-          }
-        });
-    }
-    
-    
-    
-    //other people couldn't see these for some reason, only my jim arasim account
     /**
      * This method will upload a photo on the users behalf
      * @param {type} imageUrl
@@ -244,24 +201,6 @@
 //            recoverFromError();
           } else {
             $('#fbstatuslist').append('<li>uploadPhotoToFacebook ID: ' + response.id + ' '+timestamp+'</li>');
-          }
-        });
-    }
-    
-    //other people couldn't see these for some reason, only my jim arasim account
-    /**
-     * This method will upload a photo on the users behalf to a group
-     * @param {type} imageUrl
-     * @returns {undefined}     */
-    function uploadPhotoToFacebookOmlb(imageUrl){
-        var timestamp = new Date();
-        
-        FB.api('/191968037495092/feed', 'post', { message: imageUrl, link:imageUrl }, function(response) {
-          if (!response || response.error) {
-            $('#fbstatuslist').append('<li>uploadPhotoToFacebookOmlb Error occured:'+response.error.message+' '+timestamp+'</li>');
-//            recoverFromError();
-          } else {
-            $('#fbstatuslist').append('<li>uploadPhotoToFacebookOmlb ID: ' + response.id + ' '+timestamp+'</li>');
           }
         });
     }
@@ -282,27 +221,7 @@
           }
         });
     }
-    
-    /** This method will post a status on the users behalf to the ombl group
-     * @param {type} statusMessage
-     * @returns {undefined}     */
-    function postStatusToFacebookOmlb(statusMessage){
-        //omlb group id: 191968037495092
-        //get this by:
-        //1. go to graph api explorer: https://developers.facebook.com/tools/explorer
-        //2. get access token, and check user_groups
-        //3. plug in the node: me/groups
-        var timestamp = new Date();
-        FB.api('/191968037495092/feed', 'post', { message: statusMessage }, function(response) {
-          if (!response || response.error) {
-            $('#fbstatuslist').append('<li>postStatusToFacebookOmlb Error occured:'+response.error.message+' '+timestamp+'</li>');
-//            recoverFromError();
-          } else {
-            $('#fbstatuslist').append('<li>postStatusToFacebookOmlb ID: ' + response.id + ' '+timestamp+'</li>');
-          }
-        });
-    }
-    
+
     
     /**
      * This method merely serves to keep the facebook session alive, so it does not timeout
@@ -354,3 +273,82 @@
     }
 
 
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////UNUSED
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////UNUSED
+    
+    /**
+     * This method will run a custom facebook api call
+     * @returns {undefined}     */
+    function scratch(){
+        FB.api('/313673912126184/photos', 'post', { url: imageUrl, message: imageUrl }, function(response) { 
+          if (!response || response.error) {
+            $('#fbstatuslist').append('<li>SCRATCH Error occured:'+response.error.message+' '+timestamp+'</li>');
+//            recoverFromError();
+          } else {
+            $('#fbstatuslist').append('<li>SCRATCH ID: ' + response.id + ' '+timestamp+'</li>');
+          }
+        });
+    }
+    
+    
+    //CANT DO THIS, REQUIRES USERS_GROUPS, WHICH IS ONLY MEANT FOR FACEBOOK CLIENTS ON PLATFORMS WHERE THERE IS NONE
+    /** This method will post a status on the users behalf to the ombl group
+     * @param {type} statusMessage
+     * @returns {undefined}     */
+    function postStatusToFacebookOmlb(statusMessage){
+        //omlb group id: 191968037495092
+        //get this by:
+        //1. go to graph api explorer: https://developers.facebook.com/tools/explorer
+        //2. get access token, and check user_groups
+        //3. plug in the node: me/groups
+        var timestamp = new Date();
+        FB.api('/191968037495092/feed', 'post', { message: statusMessage }, function(response) {
+          if (!response || response.error) {
+            $('#fbstatuslist').append('<li>postStatusToFacebookOmlb Error occured:'+response.error.message+' '+timestamp+'</li>');
+//            recoverFromError();
+          } else {
+            $('#fbstatuslist').append('<li>postStatusToFacebookOmlb ID: ' + response.id + ' '+timestamp+'</li>');
+          }
+        });
+    }
+    
+    
+    //CANT DO THIS, REQUIRES USERS_GROUPS, WHICH IS ONLY MEANT FOR FACEBOOK CLIENTS ON PLATFORMS WHERE THERE IS NONE
+    /**
+     * This method will upload a photo on the users behalf to a group
+     * @param {type} imageUrl
+     * @returns {undefined}     */
+    function uploadPhotoToFacebookOmlb(imageUrl){
+        var timestamp = new Date();
+        
+        FB.api('/191968037495092/feed', 'post', { message: imageUrl, link:imageUrl }, function(response) {
+          if (!response || response.error) {
+            $('#fbstatuslist').append('<li>uploadPhotoToFacebookOmlb Error occured:'+response.error.message+' '+timestamp+'</li>');
+//            recoverFromError();
+          } else {
+            $('#fbstatuslist').append('<li>uploadPhotoToFacebookOmlb ID: ' + response.id + ' '+timestamp+'</li>');
+          }
+        });
+    }
+    
+
+
+    //THIS ALBUM DOESN'T WORK, DOESN'T HAVE can_upload
+    /**
+     * This method will upload a photo to sk8creteordies cover photos album
+     * @param {type} imageUrl
+     * @returns {undefined}     */
+    function uploadPhotoToCoverPhotosAlbum(imageUrl){
+        var timestamp = new Date();
+        
+        
+        
+        FB.api('/313673912126184/photos', 'post', { url: imageUrl, message: imageUrl }, function(response) { //THIS ALBUM DOESN'T WORK, DOESN'T HAVE can_upload
+          if (!response || response.error) {
+            $('#fbstatuslist').append('<li>uploadPhotoToCoverPhotosAlbum Error occured:'+response.error.message+' '+timestamp+'</li>');
+//            recoverFromError();
+          } else {
+            $('#fbstatuslist').append('<li>uploadPhotoToCoverPhotosAlbum ID: ' + response.id + ' '+timestamp+'</li>');
+          }
+        });
+    }
