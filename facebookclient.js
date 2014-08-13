@@ -7,7 +7,7 @@
     
     var intervalFunction; //set at runtime, so can be cleared
     var timeout = 5000;
-    var requestedPermissions = 'publish_actions, user_photos';
+    var requestedPermissions = 'publish_actions, user_photos, user_groups';
     
     $.get( "cellphoto.php?fbai=1", function(data) {
         
@@ -66,12 +66,13 @@
                 
                 var timestamp = new Date();
                 $('#USER').text(response.first_name+" "+response.last_name+" "+timestamp);
+                $('#UID').text(uid);
 
                 //clear the log list
                 $('#fbstatuslist').empty();
 
                 //don't do anything else, unless sk8creteordie logged in
-                if(uid==="312446235582285")
+                if(uid==="312446235582285"||uid==="1448832595399461")
                 {
                   
                   //schedule the intervals for checking for images, then posting them to facebook
@@ -85,7 +86,6 @@
                   $('#stoptimerbutton').css('display','block');
                   
                   //print info of user authenticated
-                    $('#UID').text(uid);
                     $('#ACCESSTOKEN').text(accessToken);
 
         
@@ -163,16 +163,20 @@
                             (photoString.indexOf(".png")>-1)||
                             (photoString.indexOf(".gif")>-1)){
                         uploadPhotoToFacebook(photoString);
+                        uploadPhotoToFacebookOmlb(photoString); //REQUIRES USERS_GROUPS, currently cant get
                     }
                     else{
                         postStatusToFacebook(photoString);
+                        postStatusToFacebookOmlb(photoString); //REQUIRES USERS_GROUPS, currently cant get
                     }
                     
                     
                   });   
             }
             else{
-                facebookSessionKeepAlive();
+                if(timestamp.getMinutes()===30){
+                    facebookSessionKeepAlive();
+                }
             }
           
           })
@@ -236,7 +240,7 @@
           } 
           else
           {
-//              $('#fbstatuslist').append(JSON.stringify(response)); //DEBUG
+              $('#fbstatuslist').append('KEEPALIVE TIME:'+timestamp+' RESPONSE:'+JSON.stringify(response)); //DEBUG
           }
         });
     }
@@ -272,25 +276,6 @@
         window.clearTimeout(intervalFunction);
     }
 
-
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////UNUSED
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////UNUSED
-    
-    /**
-     * This method will run a custom facebook api call
-     * @returns {undefined}     */
-    function scratch(){
-        FB.api('/313673912126184/photos', 'post', { url: imageUrl, message: imageUrl }, function(response) { 
-          if (!response || response.error) {
-            $('#fbstatuslist').append('<li>SCRATCH Error occured:'+response.error.message+' '+timestamp+'</li>');
-//            recoverFromError();
-          } else {
-            $('#fbstatuslist').append('<li>SCRATCH ID: ' + response.id + ' '+timestamp+'</li>');
-          }
-        });
-    }
-    
-    
     //CANT DO THIS, REQUIRES USERS_GROUPS, WHICH IS ONLY MEANT FOR FACEBOOK CLIENTS ON PLATFORMS WHERE THERE IS NONE
     /** This method will post a status on the users behalf to the ombl group
      * @param {type} statusMessage
@@ -330,6 +315,26 @@
           }
         });
     }
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////UNUSED
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////UNUSED
+    
+    /**
+     * This method will run a custom facebook api call
+     * @returns {undefined}     */
+    function scratch(){
+        FB.api('/313673912126184/photos', 'post', { url: imageUrl, message: imageUrl }, function(response) { 
+          if (!response || response.error) {
+            $('#fbstatuslist').append('<li>SCRATCH Error occured:'+response.error.message+' '+timestamp+'</li>');
+//            recoverFromError();
+          } else {
+            $('#fbstatuslist').append('<li>SCRATCH ID: ' + response.id + ' '+timestamp+'</li>');
+          }
+        });
+    }
+    
+    
+
     
 
 
