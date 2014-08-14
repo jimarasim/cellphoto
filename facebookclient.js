@@ -179,8 +179,6 @@
             }
             else{
                 if(timestamp.getMinutes()===00 ||
-                   timestamp.getMinutes()===15 || 
-                   timestamp.getMinutes()===45 ||
                    timestamp.getMinutes()===30 ){
                     facebookSessionKeepAlive();
                 }
