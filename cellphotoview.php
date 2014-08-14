@@ -113,7 +113,7 @@ if ($handle = opendir($cellphotodir))
 	while (false !== ($file = readdir($handle)))
 	{
 		//only display supported file extensions
-		if (strpos($file,".jpg") || strpos($file,".mov") || strpos($file,".gif") || strpos($file,".3gp") || strpos($file,".png") || strpos($file,".m4a"))
+		if (strpos($file,".jpg") || strpos($file,".mov") || strpos($file,".gif") || strpos($file,".3gp") || strpos($file,".png") || strpos($file,".m4a") || strpos($file,".mp4"))
 		{
 			//don't display "small_" versions
 			if(!strpos($file,"mall_"))
@@ -322,6 +322,13 @@ foreach($files as $increment => $name)
 			echo("</OBJECT>");
 			echo("</DIV>");
 		}
+                else if(strpos($name,".mp4"))
+                {
+                    //id for the movie's div tag (file name wasn't jiving)
+                    $movid+=1;
+                        
+                    echo("<video style='width: 30%;' controls='controls' poster='video.jpg' title='mp4 vid' preload='metadata' id='".$movid."'><source src='".$cellphotodir."/".$name."' type='video/mp4' id='videomp4'></video>");
+                }
 	
 		echo("</td>");	
 	}

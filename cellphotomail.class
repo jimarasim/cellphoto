@@ -300,7 +300,7 @@ class CellPhotoMail
             foreach($partarray as $partid => $subtype)
             {
                 //only save certain Media subtypes
-                $mediaToSave = array("JPEG","QUICKTIME","GIF","3GPP","PNG","X-M4A");
+                $mediaToSave = array("JPEG","QUICKTIME","GIF","3GPP","PNG","X-M4A","MP4");
                 if(in_array($subtype,$mediaToSave))
                 {
                     
@@ -335,6 +335,10 @@ class CellPhotoMail
                         if($subtype == "PNG")
                         {
                           $filestring = $this->fileprefix.date('YmdHis').$fileversion.".png";
+                        }
+                        if($subtype == "MP4")
+                        {
+                          $filestring = $this->fileprefix.date('YmdHis').$fileversion.".mp4";
                         }
                     } while(file_exists($this->filesubdir."/".$filestring));
 

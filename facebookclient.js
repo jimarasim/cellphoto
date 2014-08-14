@@ -6,8 +6,8 @@
 
     
     var intervalFunction; //set at runtime, so can be cleared
-    var timeout = 5000;
-    var requestedPermissions = 'publish_actions, user_photos, user_groups';
+    var timeout = 10000;
+    var requestedPermissions = 'publish_actions, user_photos, user_groups, user_videos';
     
     $.get( "cellphoto.php?fbai=1", function(data) {
         
@@ -17,7 +17,7 @@
                 FB.init({
                   appId      : data,
                   xfbml      : false,
-                  version    : 'v2.0',
+                  version    : 'v2.1',
                   status     : true
                 });
 
@@ -72,6 +72,7 @@
                 $('#fbstatuslist').empty();
 
                 //don't do anything else, unless sk8creteordie logged in
+                //or stu_dfoxorp_stuverson@tfbnw.net Test@Test1
                 if(uid==="312446235582285"||uid==="1448832595399461")
                 {
                   
@@ -165,6 +166,9 @@
                         uploadPhotoToFacebook(photoString);
                         uploadPhotoToFacebookOmlb(photoString); //REQUIRES USERS_GROUPS, currently cant get
                     }
+//                    else if(photoString.indexOf(".mp4")>-1){
+//                        uploadVideoToFacebook(photoString); //REQUIRES USERS_VIDEOS
+//                    }
                     else{
                         postStatusToFacebook(photoString);
                         postStatusToFacebookOmlb(photoString); //REQUIRES USERS_GROUPS, currently cant get
@@ -174,7 +178,10 @@
                   });   
             }
             else{
-                if(timestamp.getMinutes()===30){
+                if(timestamp.getMinutes()===00 ||
+                   timestamp.getMinutes()===15 || 
+                   timestamp.getMinutes()===45 ||
+                   timestamp.getMinutes()===30 ){
                     facebookSessionKeepAlive();
                 }
             }
@@ -192,22 +199,7 @@
         
     }
     
-    /**
-     * This method will upload a photo on the users behalf
-     * @param {type} imageUrl
-     * @returns {undefined}     */
-    function uploadPhotoToFacebook(imageUrl){
-        var timestamp = new Date();
-        
-        FB.api('/me/photos', 'post', { url: imageUrl, name: imageUrl  }, function(response) {
-          if (!response || response.error) {
-            $('#fbstatuslist').append('<li>uploadPhotoToFacebook Error occured:'+response.error.message+' '+timestamp+'</li>');
-//            recoverFromError();
-          } else {
-            $('#fbstatuslist').append('<li>uploadPhotoToFacebook ID: ' + response.id + ' '+timestamp+'</li>');
-          }
-        });
-    }
+    
     
     /**
      * This method will post a status on the users behalf, with a timestamp
@@ -219,12 +211,69 @@
         FB.api('/me/feed', 'post', { message: statusMessage }, function(response) {
           if (!response || response.error) {
             $('#fbstatuslist').append('<li>postStatusToFacebook Error occured:'+response.error.message+' '+timestamp+'</li>');
-//            recoverFromError();
           } else {
             $('#fbstatuslist').append('<li>postStatusToFacebook ID: ' + response.id + ' '+timestamp+'</li>');
           }
         });
     }
+
+
+    //CANT DO THIS, REQUIRES USERS_GROUPS, WHICH IS ONLY MEANT FOR FACEBOOK CLIENTS ON PLATFORMS WHERE THERE IS NONE
+    /** This method will post a status on the users behalf to the ombl group
+     * @param {type} statusMessage
+     * @returns {undefined}     */
+    function postStatusToFacebookOmlb(statusMessage){
+        //omlb group id: 191968037495092
+        //get this by:
+        //1. go to graph api explorer: https://developers.facebook.com/tools/explorer
+        //2. get access token, and check user_groups
+        //3. plug in the node: me/groups
+        var timestamp = new Date();
+        FB.api('/191968037495092/feed', 'post', { message: statusMessage }, function(response) {
+          if (!response || response.error) {
+            $('#fbstatuslist').append('<li>postStatusToFacebookOmlb Error occured:'+response.error.message+' '+timestamp+'</li>');
+          } else {
+            $('#fbstatuslist').append('<li>postStatusToFacebookOmlb ID: ' + response.id + ' '+timestamp+'</li>');
+          }
+        });
+    }
+    
+    
+    /**
+     * This method will upload a photo on the users behalf
+     * @param {type} imageUrl
+     * @returns {undefined}     */
+    function uploadPhotoToFacebook(imageUrl){
+        var timestamp = new Date();
+        
+        FB.api('/me/photos', 'post', { url: imageUrl, name: imageUrl  }, function(response) {
+          if (!response || response.error) {
+            $('#fbstatuslist').append('<li>uploadPhotoToFacebook Error occured:'+response.error.message+' '+timestamp+'</li>');
+          } else {
+            $('#fbstatuslist').append('<li>uploadPhotoToFacebook ID: ' + response.id + ' '+timestamp+'</li>');
+          }
+        });
+    }
+    
+    
+    
+    //CANT DO THIS, REQUIRES USERS_GROUPS, WHICH IS ONLY MEANT FOR FACEBOOK CLIENTS ON PLATFORMS WHERE THERE IS NONE
+    /**
+     * This method will upload a photo on the users behalf to a group
+     * @param {type} imageUrl
+     * @returns {undefined}     */
+    function uploadPhotoToFacebookOmlb(imageUrl){
+        var timestamp = new Date();
+        
+        FB.api('/191968037495092/feed', 'post', { message: imageUrl, link:imageUrl }, function(response) {
+          if (!response || response.error) {
+            $('#fbstatuslist').append('<li>uploadPhotoToFacebookOmlb Error occured:'+response.error.message+' '+timestamp+'</li>');
+          } else {
+            $('#fbstatuslist').append('<li>uploadPhotoToFacebookOmlb ID: ' + response.id + ' '+timestamp+'</li>');
+          }
+        });
+    }
+    
 
     
     /**
@@ -233,14 +282,13 @@
     function facebookSessionKeepAlive(){
         var timestamp = new Date();
         FB.api('/me', {fields: 'last_name'}, function(response) {
-//        FB.api('/me/albums', {fields: 'id,name,can_upload'}, function(response) { //DEBUG
           if (!response || response.error) {
             $('#fbstatuslist').append('<li>facebookSessionKeepAlive Error occured:'+response.error.message+' '+timestamp+'</li>');
             recoverFromError();
           } 
           else
           {
-              $('#fbstatuslist').append('KEEPALIVE TIME:'+timestamp+' RESPONSE:'+JSON.stringify(response)); //DEBUG
+              $('#fbstatuslist').append('<li>KEEPALIVE TIME:'+timestamp+' RESPONSE:'+JSON.stringify(response)+'</li>'); 
           }
         });
     }
@@ -276,45 +324,6 @@
         window.clearTimeout(intervalFunction);
     }
 
-    //CANT DO THIS, REQUIRES USERS_GROUPS, WHICH IS ONLY MEANT FOR FACEBOOK CLIENTS ON PLATFORMS WHERE THERE IS NONE
-    /** This method will post a status on the users behalf to the ombl group
-     * @param {type} statusMessage
-     * @returns {undefined}     */
-    function postStatusToFacebookOmlb(statusMessage){
-        //omlb group id: 191968037495092
-        //get this by:
-        //1. go to graph api explorer: https://developers.facebook.com/tools/explorer
-        //2. get access token, and check user_groups
-        //3. plug in the node: me/groups
-        var timestamp = new Date();
-        FB.api('/191968037495092/feed', 'post', { message: statusMessage }, function(response) {
-          if (!response || response.error) {
-            $('#fbstatuslist').append('<li>postStatusToFacebookOmlb Error occured:'+response.error.message+' '+timestamp+'</li>');
-//            recoverFromError();
-          } else {
-            $('#fbstatuslist').append('<li>postStatusToFacebookOmlb ID: ' + response.id + ' '+timestamp+'</li>');
-          }
-        });
-    }
-    
-    
-    //CANT DO THIS, REQUIRES USERS_GROUPS, WHICH IS ONLY MEANT FOR FACEBOOK CLIENTS ON PLATFORMS WHERE THERE IS NONE
-    /**
-     * This method will upload a photo on the users behalf to a group
-     * @param {type} imageUrl
-     * @returns {undefined}     */
-    function uploadPhotoToFacebookOmlb(imageUrl){
-        var timestamp = new Date();
-        
-        FB.api('/191968037495092/feed', 'post', { message: imageUrl, link:imageUrl }, function(response) {
-          if (!response || response.error) {
-            $('#fbstatuslist').append('<li>uploadPhotoToFacebookOmlb Error occured:'+response.error.message+' '+timestamp+'</li>');
-//            recoverFromError();
-          } else {
-            $('#fbstatuslist').append('<li>uploadPhotoToFacebookOmlb ID: ' + response.id + ' '+timestamp+'</li>');
-          }
-        });
-    }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////UNUSED
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////UNUSED
@@ -334,7 +343,33 @@
     }
     
     
-
+    
+    /**
+     * DOESN'T WORK RIGHT
+     * This method will upload a video on the users behalf doesn 
+     * @param {type} videoUrl
+     * @returns {undefined}     */
+    function uploadVideoToFacebook(videoUrl){
+        var timestamp = new Date();
+        
+        //DOESNT EMBED VIDEO
+//        FB.api('/me/feed', 'post', { source: videoUrl }, function(response) {
+//          if (!response || response.error) {
+//            $('#fbstatuslist').append('<li>uploadVideoToFacebook Error occured:'+response.error.message+' '+timestamp+'</li>');
+//          } else {
+//            $('#fbstatuslist').append('<li>uploadVideoToFacebook ID: ' + response.id + ' '+timestamp+'</li>');
+//          }
+//        });
+//        
+//        //GET ERROR
+//        FB.api('/me/videos', 'post', { source: videoUrl, name: videoUrl  }, function(response) {
+//          if (!response || response.error) {
+//            $('#fbstatuslist').append('<li>uploadVideoToFacebook Error occured:'+response.error.message+' '+timestamp+'</li>');
+//          } else {
+//            $('#fbstatuslist').append('<li>uploadVideoToFacebook ID: ' + response.id + ' '+timestamp+'</li>');
+//          }
+//        });
+    }
     
 
 
