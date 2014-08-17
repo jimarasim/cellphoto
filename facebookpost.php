@@ -60,7 +60,7 @@ Last Response:
 </tr>
 </table>
 <a href='privacypolicy.html' target='_blank'>Privacy Policy</a>
-
+<br />This site will never have advertising nor anything for sale.<br />
 
 
 
