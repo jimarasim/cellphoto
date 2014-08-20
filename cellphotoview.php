@@ -101,7 +101,7 @@ function setstartimage()
 <body class="visible" onload="javascript:preload_images();">
 
 <center>
-<h3>Images and movies texted from Cell phones.  Email request for use to jaemzware@hotmail.com</h3>
+<h3>Images and movies texted from Cell phones.  Email request for use to jaemzware@yahoo.com</h3>
 <?php
 $cellphotodir = "cellphoto";
 $files = array();

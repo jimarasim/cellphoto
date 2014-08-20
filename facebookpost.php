@@ -5,8 +5,16 @@
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
     <script type="text/javascript" src="facebookclient.js"></script>
     <link rel="Stylesheet" href="stylebase.css" />
+    <link rel="stylesheet" type="text/css" href="http://fonts.googleapis.com/css?family=Rancho&effect=shadow-multiple">
+        <style>
+          #title {
+            font-family: 'Rancho', serif;
+            font-size: 48px;
+          }
+        </style>
 </head>
-<body>    
+<body>   
+<h1 id="title">Sk8CreteOrBot</h1>
 <div id="importantLinks"></div>
 <table>
 <tr>
