@@ -6,7 +6,7 @@
 
     
     var intervalFunction; //set at runtime, so can be cleared
-    var timeout = 10000;
+    var timeout = 5000;
 //REMOVING , TO MAKE IT EASIER TO GET APPROVED
 //    var requestedPermissions = 'publish_actions, user_photos, user_groups, user_videos';
     var requestedPermissions = 'publish_actions, user_photos';
@@ -14,7 +14,7 @@
     $.get( "cellphoto.php?fbai=1", function(data) {
         
         if(data){
-            
+
             window.fbAsyncInit = function() {
                 FB.init({
                   appId      : data,
