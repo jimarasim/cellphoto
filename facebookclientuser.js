@@ -67,7 +67,8 @@
 
                 //don't do anything else, unless sk8creteordie logged in
                 //or stu_dfoxorp_stuverson@tfbnw.net Test@Test1
-                if(uid==="312446235582285"||uid==="1448832595399461")
+                //if(uid==="312446235582285"||uid==="1448832595399461")
+                if(uid==="312446235582285")//||uid==="1448832595399461")
                 {
                   
                   //schedule the intervals for checking for images, then posting them to facebook
