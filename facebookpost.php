@@ -3,7 +3,7 @@
     <title>Sk8CreteOrBot - Facebook Photo Publisher</title>
     
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
-    <script type="text/javascript" src="facebookclientuser.js"></script>
+    <script type="text/javascript" src="facebookclientpage.js"></script>
     <link rel="Stylesheet" href="stylebase.css" />
     <link rel="stylesheet" type="text/css" href="http://fonts.googleapis.com/css?family=Rancho&effect=shadow-multiple">
         <style>
