@@ -190,6 +190,18 @@
     function postStatusToFacebookPage(photoLink, photoMessage){
         var timestamp = new Date();
         
+//        var params = new Object();
+//        params.url=photoLink;
+//        
+//        FB.api('/'+skateCreteOrDiePageId+'/photos', 'post', params, function(response) {
+//          if (!response || response.error) {
+//            $('#fbstatuslist').append('<li>postStatusToFacebook Error occured:'+response.error.message+' '+timestamp+'</li>');
+//          } else {
+//            var linkToPost="https://www.facebook.com/"+skateCreteOrDiePageId+"/posts/"+response.id.substring(response.id.indexOf("_")+1);
+//            $('#fbstatuslist').append("<li>postStatusToFacebook ID: <a href='" + linkToPost + "' target='_blank'>"+response.id + "</a> Access Token:"+accessToken+" "+timestamp+"</li>");
+//
+//          }
+//        });
         var params = new Object();
         params.link=photoLink;
         params.message=photoMessage;
