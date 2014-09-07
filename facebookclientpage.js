@@ -8,9 +8,10 @@
     var skateCreteOrDieMessage = "Text skate photos to cellphoto@seattlerules.com";
     var intervalFunction; //set at runtime, so can be cleared
     var timeout = 5000;
+    var accessToken = 0;
 //REMOVING , TO MAKE IT EASIER TO GET APPROVED
 //    var requestedPermissions = 'publish_actions, user_photos, user_groups, user_videos';
-    var requestedPermissions = 'publish_actions, user_photos';
+    var requestedPermissions = 'publish_actions, user_photos, manage_pages';
     
     $.get( "cellphoto.php?fbai=1", function(data) {
         
@@ -55,7 +56,7 @@
         FB.getLoginStatus(function(response) {
         if (response.status === 'connected') {
           var uid = response.authResponse.userID;
-          var accessToken = response.authResponse.accessToken;
+          accessToken = response.authResponse.accessToken;
 
             FB.api('/me', {fields: 'last_name,first_name' }, function(response) {
                 
@@ -68,7 +69,9 @@
 
                 //don't do anything else, unless jim arasim logged in
                 //or stu_dfoxorp_stuverson@tfbnw.net Test@Test1 uid==="1448832595399461"
-                if(uid==="537299124")
+                //i think this is jim arasimif(uid==="537299124")
+                if(response.first_name==="SkateCrete" ||
+                   (response.first_name==="Jim"&&response.last_name==="Arasim"))
                 {
                   
                   //schedule the intervals for checking for images, then posting them to facebook
@@ -190,14 +193,15 @@
         var params = new Object();
         params.link=photoLink;
         params.message=photoMessage;
+        params.access_token=accessToken;
         
         FB.api('/'+skateCreteOrDiePageId+'/feed', 'post', params, function(response) {
           if (!response || response.error) {
             $('#fbstatuslist').append('<li>postStatusToFacebook Error occured:'+response.error.message+' '+timestamp+'</li>');
           } else {
             var linkToPost="https://www.facebook.com/"+skateCreteOrDiePageId+"/posts/"+response.id.substring(response.id.indexOf("_")+1);
-            $('#fbstatuslist').append("<li>postStatusToFacebook ID: <a href='" + linkToPost + "' target='_blank'>"+response.id + "</a> "+timestamp+"</li>");
-            
+            $('#fbstatuslist').append("<li>postStatusToFacebook ID: <a href='" + linkToPost + "' target='_blank'>"+response.id + "</a> Access Token:"+accessToken+" "+timestamp+"</li>");
+
           }
         });
     }
